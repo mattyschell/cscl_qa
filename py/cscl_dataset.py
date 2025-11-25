@@ -80,6 +80,15 @@ class CSCLDataset(object):
         else:
             return False
 
+    def _get_field_type(self
+                       ,gdb
+                       ,field_name):
+
+        fields = arcpy.ListFields(os.path.join(gdb, self.datasetpath)
+                                 ,field_name)
+
+        return fields[0].type # string, integer, double, etc
+
     def exists(self
               ,gdb):
 
@@ -101,5 +110,43 @@ class CSCLDataset(object):
         else:
             return None
 
+    def attribute_exists(self
+                        ,gdb
+                        ,column
+                        ,attribute
+                        ,fuzzy=True):
 
-    
+
+        if not self.istable:
+            return False
+
+        try:
+            field_type = self._get_field_type(gdb
+                                             ,column)
+
+            if field_type == 'String':
+                targetattribute = attribute.lower()
+            else:
+                targetattribute = attribute
+
+            def matches(value):
+                if value is None:
+                    return False
+                if field_type == 'String':
+                    if (fuzzy and targetattribute in value.lower()):
+                        return True
+                    elif targetattribute == value.lower():
+                        return True
+                    else:
+                        return False
+                else:
+                    return value == targetattribute
+
+            return any(
+                matches(row[0])
+                for row in arcpy.da.SearchCursor(os.path.join(gdb, self.datasetpath)
+                                                ,[column])
+            )
+        except arcpy.ExecuteError:
+            return False
+   

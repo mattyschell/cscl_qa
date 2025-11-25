@@ -54,5 +54,47 @@ class CSCLDatasetTestCase(unittest.TestCase):
         self.assertEqual({self.borough.is_py2, self.borough.is_py3}
                         ,{True, False})
 
+    def test_eattributeexists(self):
+
+        self.assertTrue(self.borough.attribute_exists(self.sourcegdb
+                                                     ,'BoroName'
+                                                     ,'Manhattan'))
+
+        self.assertFalse(self.borough.attribute_exists(self.sourcegdb
+                                                      ,'BoroName'
+                                                      ,'Philadelphia'))
+
+        self.assertTrue(self.borough.attribute_exists(self.sourcegdb
+                                                     ,'BoroCode'
+                                                     ,1))
+
+        self.assertFalse(self.borough.attribute_exists(self.sourcegdb
+                                                      ,'BoroCode'
+                                                      ,6))
+
+        # fuzzy match
+        self.assertTrue(self.borough.attribute_exists(self.badtargetgdb
+                                                     ,'BoroName'
+                                                     ,'JUNK'))
+        
+        self.assertTrue(self.borough.attribute_exists(self.badtargetgdb
+                                                     ,'BoroName'
+                                                     ,'Junk'))
+
+        self.assertTrue(self.borough.attribute_exists(self.badtargetgdb
+                                                     ,'BoroName'
+                                                     ,'junk'))
+
+        # exact match (still case insensitive)
+        self.assertFalse(self.borough.attribute_exists(self.badtargetgdb
+                                                     ,'BoroName'
+                                                     ,'JUNK'
+                                                     ,False))
+
+        self.assertTrue(self.borough.attribute_exists(self.badtargetgdb
+                                                     ,'BoroName'
+                                                     ,'Staten junk Island'
+                                                     ,False))                                                     
+
 if __name__ == '__main__':
     unittest.main()
