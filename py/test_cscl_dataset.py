@@ -22,6 +22,13 @@ class CSCLDatasetTestCase(unittest.TestCase):
         self.badtargetgdb  = os.path.join(self.repo_root
                                          ,'testdata'
                                          ,'badtarget.gdb')
+        
+        # no test data for these but we test the resource wrangling
+        # schema is a firm requirement because when possible 
+        # we will run QA from a read-only user
+        self.boroughwithschema           = cscl_dataset.CSCLDataset('MALTAGOYA.Borough')
+        self.rail_schema_featuredataset  = cscl_dataset.CSCLDataset('MALTAGOYA.Rail')
+        self.subwaystationshavefeaturenames = cscl_dataset.CSCLDataset('MALTAGOYA.SubwayStationsHaveFeatureNames')
 
     def test_afeatureclass(self):
         
@@ -94,7 +101,27 @@ class CSCLDatasetTestCase(unittest.TestCase):
         self.assertTrue(self.borough.attribute_exists(self.badtargetgdb
                                                      ,'BoroName'
                                                      ,'Staten junk Island'
-                                                     ,False))                                                     
+                                                     ,False))  
+
+    def test_ffilterschema(self): 
+
+        self.assertEqual(self.boroughwithschema.name
+                        ,'Borough')
+
+        self.assertEqual(self.boroughwithschema.owner
+                        ,'MALTAGOYA')
+
+        self.assertIsNone(self.boroughwithschema.featuredataset)
+
+        self.assertEqual(self.boroughwithschema.gdbtype
+                        ,'featureclass')
+
+        self.assertTrue(self.boroughwithschema.istable)
+
+        self.assertEqual(self.boroughwithschema.datasetpath
+                       ,'MALTAGOYA.Borough')     
+
+                                                          
 
 if __name__ == '__main__':
     unittest.main()

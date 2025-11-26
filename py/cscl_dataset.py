@@ -7,9 +7,10 @@ import arcpy
 class CSCLDataset(object):
 
     def __init__(self
-                ,datasetname):
+                ,dataset):
          
-        self.name = datasetname
+        self.dataset = dataset
+        self.owner, self.name = self._filterschema()
 
         # not yet using this switch
         self.is_py2 = sys.version_info[0] == 2
@@ -24,10 +25,15 @@ class CSCLDataset(object):
         self.featuredataset = self._get_featuredataset()
 
         if self.featuredataset is None:
-            self.datasetpath = self.name
+            self.datasetpath = self.dataset
         else:
-            self.datasetpath = os.path.join(self.featuredataset
-                                           ,self.name)  
+            if self.owner is None:
+                self.datasetpath = os.path.join(self.featuredataset
+                                               ,self.dataset)  
+            else:
+                self.datasetpath = os.path.join('{0}.{1}'.format(self.owner
+                                                                ,self.featuredataset)
+                                               ,self.dataset)  
 
     def _get_cscl_list(self
                       ,whichlist):
@@ -40,10 +46,18 @@ class CSCLDataset(object):
 
         return contents  
 
+    def _filterschema(self):
+
+        # input like CSCL.BOROUGH jdoe.Foo or just Borough
+
+        if '.' in self.dataset:
+            return self.dataset.partition('.')[0], self.dataset.partition('.')[2]
+        else:
+            return None, self.dataset
+
     def _get_gdb_type(self):
 
         # what type of geodatabase item is this
-
         # EZ singular names. English can take the L
         typelist = ['featureclass'
                    ,'featuredataset'
@@ -57,6 +71,9 @@ class CSCLDataset(object):
         for itemtype in typelist:
             if self.name in self._get_cscl_list('all' + itemtype):
                 return itemtype
+        
+        if itemtype is None:
+            raise ValueError('{0} does not appear in our lists of resources'.format(self.name))
   
     def _get_featuredataset(self):
 
@@ -88,11 +105,27 @@ class CSCLDataset(object):
                                  ,field_name)
 
         return fields[0].type # string, integer, double, etc
+    
+    def _gdb_exists(self
+                   ,gdb):
+
+        # simple helper. 
+        # Paths on VMs and network connectivity can be messy
+
+        if not arcpy.Exists(gdb):
+            raise ValueError('Geodatabase path {0} is not valid'.format(gdb))
+
+        if arcpy.Describe(gdb).dataType not in ('Workspace'
+                                               ,'SDEWorkspace'):
+            raise ValueError('{0} is not a valid geodatabase'.format(gdb))
+        
+        return True
 
     def exists(self
               ,gdb):
 
-        if arcpy.Exists(os.path.join(gdb, self.datasetpath)):
+        if (self._gdb_exists(gdb) and \
+            arcpy.Exists(os.path.join(gdb, self.datasetpath))):
             return True
         else:
             return False   
@@ -100,7 +133,8 @@ class CSCLDataset(object):
     def count(self
              ,gdb):
 
-        if self.istable:
+        if (self._gdb_exists(gdb) and \
+            self.istable):
             try:
                 kount = int(arcpy.management.GetCount(os.path.join(gdb
                                                                   ,self.datasetpath))[0])
@@ -116,8 +150,8 @@ class CSCLDataset(object):
                         ,attribute
                         ,fuzzy=True):
 
-
-        if not self.istable:
+        if (self._gdb_exists(gdb) and not \
+            self.istable):
             return False
 
         try:
