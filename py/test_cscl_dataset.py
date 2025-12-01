@@ -8,7 +8,7 @@ class CSCLDatasetTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(self):
 
-        self.repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__)
+        self.repo_root     = os.path.abspath(os.path.join(os.path.dirname(__file__)
                                                      ,".."))
 
         self.borough       = cscl_dataset.CSCLDataset('Borough')
@@ -22,12 +22,16 @@ class CSCLDatasetTestCase(unittest.TestCase):
         self.badtargetgdb  = os.path.join(self.repo_root
                                          ,'testdata'
                                          ,'badtarget.gdb')
+
+        self.nonexistentgdb = os.path.join(self.repo_root
+                                          ,'testdata'
+                                          ,'maltagoya.gdb')
         
         # no test data for these but we test the resource wrangling
         # schema is a firm requirement because when possible 
         # we will run QA from a read-only user
-        self.boroughwithschema           = cscl_dataset.CSCLDataset('MALTAGOYA.Borough')
-        self.rail_schema_featuredataset  = cscl_dataset.CSCLDataset('MALTAGOYA.Rail')
+        self.boroughwithschema              = cscl_dataset.CSCLDataset('MALTAGOYA.Borough')
+        self.rail_schema_featuredataset     = cscl_dataset.CSCLDataset('MALTAGOYA.Rail')
         self.subwaystationshavefeaturenames = cscl_dataset.CSCLDataset('MALTAGOYA.SubwayStationsHaveFeatureNames')
 
     def test_afeatureclass(self):
@@ -121,6 +125,56 @@ class CSCLDatasetTestCase(unittest.TestCase):
         self.assertEqual(self.boroughwithschema.datasetpath
                        ,'MALTAGOYA.Borough')     
 
+    def test_gschemaandfeaturedataset(self):
+        
+        self.assertEqual(self.rail_schema_featuredataset.name
+                        ,'Rail')
+
+        self.assertEqual(self.rail_schema_featuredataset.owner
+                        ,'MALTAGOYA')
+
+        self.assertEqual(self.rail_schema_featuredataset.featuredataset
+                        ,'CSCL')
+
+        self.assertEqual(self.rail_schema_featuredataset.gdbtype
+                        ,'featureclass')
+
+        self.assertTrue(self.rail_schema_featuredataset.istable)
+
+        # this may not be correct but for now it is what it is
+        self.assertEqual(self.rail_schema_featuredataset.datasetpath
+                       ,'MALTAGOYA.CSCL\MALTAGOYA.Rail')     
+
+    def test_hattributedrelationshipclass(self):
+        
+        self.assertEqual(self.subwaystationshavefeaturenames.name
+                        ,'SubwayStationsHaveFeatureNames')
+
+        self.assertEqual(self.subwaystationshavefeaturenames.owner
+                        ,'MALTAGOYA')
+
+        self.assertIsNone(self.subwaystationshavefeaturenames.featuredataset)
+
+        self.assertEqual(self.subwaystationshavefeaturenames.gdbtype
+                        ,'attributedrelationshipclass')
+
+        self.assertTrue(self.subwaystationshavefeaturenames.istable)
+
+        self.assertEqual(self.subwaystationshavefeaturenames.datasetpath
+                       ,'MALTAGOYA.SubwayStationsHaveFeatureNames') 
+
+    def test_ibadgdbraises(self): 
+        
+        with self.assertRaises(ValueError):
+            self.borough.exists(self.nonexistentgdb)
+
+        with self.assertRaises(ValueError):
+            self.borough.count(self.nonexistentgdb)
+            
+        with self.assertRaises(ValueError):
+            self.borough.attribute_exists(self.nonexistentgdb
+                                         ,'BoroName'
+                                         ,'Manhattan')
                                                           
 
 if __name__ == '__main__':

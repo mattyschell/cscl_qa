@@ -62,11 +62,11 @@ class CSCLDataset(object):
         typelist = ['featureclass'
                    ,'featuredataset'
                    ,'featuretable'
+                   ,'attributedrelationshipclass' # overlaps next must go first
                    ,'relationshipclass'
                    ,'topology'
                    ,'archiveclass'
-                   ,'domain'
-                   ,'attributedrelationshipclass']
+                   ,'domain']
         
         for itemtype in typelist:
             if self.name in self._get_cscl_list('all' + itemtype):
