@@ -107,6 +107,63 @@ class CSCLDatasetTestCase(unittest.TestCase):
                                                      ,'Staten junk Island'
                                                      ,False))  
 
+        self.assertTrue(self.borough.attribute_exists(self.badtargetgdb
+                                                     ,'BoroCode'
+                                                     ,1))
+
+        # argparse inputs from python scripts will treat the attribute as a string
+        # input attributes should be made to match the storage datatype
+        # borocode is numeric '1' should be converted to 1 and match
+        self.assertTrue(self.borough.attribute_exists(self.sourcegdb
+                                                     ,'BoroCode'
+                                                     ,'1'))
+
+        self.assertTrue(self.borough.attribute_exists(self.sourcegdb
+                                                     ,'BoroCode'
+                                                     ,'1.00'))
+
+        self.assertFalse(self.borough.attribute_exists(self.sourcegdb
+                                                      ,'BoroCode'
+                                                      ,'6'))
+                                                      
+        self.assertFalse(self.borough.attribute_exists(self.sourcegdb
+                                                      ,'BoroCode'
+                                                      ,'1.01'))
+
+        # this precision is not necessarily displayed in catalog
+        # here we are at the limits of floating point numbers
+        #     catalog shows 1186614016.2245
+        # in contrast Staten Island shows 1623758505.75111 and that is the match
+        # exact match
+        self.assertTrue(self.borough.attribute_exists(self.sourcegdb
+                                                     ,'Shape_Area'
+                                                     ,1186614016.2245002))
+        
+        self.assertTrue(self.borough.attribute_exists(self.sourcegdb
+                                                     ,'Shape_Area'
+                                                     ,'1186614016.2245002'))
+
+        # here we have added one more digit than is supported by floats
+        # this attribute exists. the 8th place 1 is nonexistent 
+        # float(1186614016.22450021) returns 1186614016.2245002
+        self.assertTrue(self.borough.attribute_exists(self.sourcegdb
+                                                     ,'Shape_Area'
+                                                     ,1186614016.22450021))
+        
+        self.assertTrue(self.borough.attribute_exists(self.sourcegdb
+                                                     ,'Shape_Area'
+                                                     ,'1186614016.22450021'))
+
+        # here we are back in the realm of supported floats
+        # this should not match
+        self.assertFalse(self.borough.attribute_exists(self.sourcegdb
+                                                     ,'Shape_Area'
+                                                     ,1186614016.224500))
+        
+        self.assertFalse(self.borough.attribute_exists(self.sourcegdb
+                                                     ,'Shape_Area'
+                                                     ,'1186614016.224500'))
+        
     def test_ffilterschema(self): 
 
         self.assertEqual(self.boroughwithschema.name

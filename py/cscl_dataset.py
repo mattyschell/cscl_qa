@@ -120,6 +120,14 @@ class CSCLDataset(object):
             raise ValueError('{0} is not a valid geodatabase'.format(gdb))
         
         return True
+    
+    def _safe_to_number(self
+                       ,value):
+        try:
+            num = float(value)
+            return int(num) if num.is_integer() else num
+        except (ValueError, TypeError):
+            return value
 
     def exists(self
               ,gdb):
@@ -161,7 +169,8 @@ class CSCLDataset(object):
             if field_type == 'String':
                 targetattribute = attribute.lower()
             else:
-                targetattribute = attribute
+                # string input attribute should be made to match the storage datatype
+                targetattribute = self._safe_to_number(attribute)
 
             def matches(value):
                 if value is None:
@@ -174,6 +183,7 @@ class CSCLDataset(object):
                     else:
                         return False
                 else:
+                    #print('comparing {0} to {1}'.format(value, targetattribute))
                     return value == targetattribute
 
             return any(
