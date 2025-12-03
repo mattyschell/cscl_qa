@@ -5,7 +5,9 @@ Miscellaneous quality assurance checks on NYC's top banana geodatabase.  Friends
 ### QA a child replica dataset
 
 ```text
-usage: qa_child_dataset.py [-h] [--deltastart DELTASTART] dataset geodatabase childgeodatabase logdir
+usage: qa_child_dataset.py [-h] [--badattribute BADATTRIBUTE] [--badattributecolumn BADATTRIBUTECOLUMN]
+                           [--deltastart DELTASTART]
+                           dataset geodatabase childgeodatabase logdir
 
 QA a child CSCL dataset
 
@@ -17,6 +19,10 @@ positional arguments:
 
 options:
   -h, --help            show this help message and exit
+  --badattribute BADATTRIBUTE
+                        Known junk value (ex junk)
+  --badattributecolumn BADATTRIBUTECOLUMN
+                        Column to check for junk
   --deltastart DELTASTART
                         Known count difference on the child
 ```
