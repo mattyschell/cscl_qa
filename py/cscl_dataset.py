@@ -12,9 +12,10 @@ class CSCLDataset(object):
         self.dataset = dataset
         self.owner, self.name = self._filterschema()
 
-        # not yet using this switch
-        self.is_py2 = sys.version_info[0] == 2
-        self.is_py3 = sys.version_info[0] == 3
+        if sys.version_info[0] == 2:
+            self.arcpyversion = 2
+        elif sys.version_info[0] == 3:
+            self.arcpyversion = 3
 
         # featureclass, featuredataset, etc
         self.gdbtype = self._get_gdb_type()
@@ -42,7 +43,8 @@ class CSCLDataset(object):
                               ,'resources'
                               ,whichlist)) as l:
             
-            contents = [line.strip() for line in l]
+            # by convention upper case when matching to the list 
+            contents = [line.strip().upper() for line in l]
 
         return contents  
 
@@ -69,7 +71,7 @@ class CSCLDataset(object):
                    ,'domain']
         
         for itemtype in typelist:
-            if self.name in self._get_cscl_list('all' + itemtype):
+            if self.name.upper() in self._get_cscl_list('all' + itemtype):
                 return itemtype
         
         if itemtype is None:
@@ -85,7 +87,7 @@ class CSCLDataset(object):
 
             # just one (for now) deceitful featuredataset to loop over
         
-            if self.name in self._get_cscl_list(featuredatasetname):
+            if self.name.upper() in self._get_cscl_list(featuredatasetname):
                 return featuredatasetname
             
         return None
@@ -146,9 +148,13 @@ class CSCLDataset(object):
             try:
                 kount = int(arcpy.management.GetCount(os.path.join(gdb
                                                                   ,self.datasetpath))[0])
+                return kount
             except arcpy.ExecuteError:
-                kount = 0
-            return kount
+                # this typically means arcpy3 hitting a legacy dataset with class extensions
+                raise ValueError('Couldnt get a count for ' \
+                                '{0} using arcpy {1}. Details: {2}'.format(os.path.join(gdb,self.datasetpath)
+                                                                          ,self.arcpyversion
+                                                                          ,arcpy.GetMessages(2)))
         else:
             return None
 

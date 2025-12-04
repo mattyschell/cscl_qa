@@ -58,7 +58,7 @@ def main():
                                        ,args.badattribute):
             badkount +=1
             logger.warning('QA: bad {0} value {1} on parent'.format(args.badattributecolumn
-                                                                ,args.badattribute))  
+                                                                   ,args.badattribute))  
         else:
             logger.info('PASS: no value {0} in {1} on parent'.format(args.badattribute
                                                                     ,args.badattributecolumn))                        
@@ -73,11 +73,19 @@ def main():
             logger.info('PASS: no value {0} in {1} on child'.format(args.badattribute
                                                                    ,args.badattributecolumn)) 
 
-    if cscldataset.count(args.geodatabase) != (cscldataset.count(args.childgeodatabase) + args.deltastart):
-        badkount +=1
-        logger.warning('QA: bad row count on {0}'.format(args.childgeodatabase))
-    else:
-        logger.info('PASS: good row count on {0}'.format(args.childgeodatabase))
+    try:
+        if cscldataset.count(args.geodatabase) != (cscldataset.count(args.childgeodatabase) + args.deltastart):
+            badkount +=1
+            logger.info('Parent count returned {0}'.format(cscldataset.count(args.geodatabase)))
+            logger.info('Child count returned {0}'.format(cscldataset.count(args.childgeodatabase)))
+            logger.warning('QA: bad row count on {0}'.format(args.childgeodatabase))
+        else:
+            logger.info('PASS: good row count on {0}'.format(args.childgeodatabase))
+    except TypeError:
+        logger.error('Failed to get counts')
+        logger.error('Parent count returned {0}'.format(cscldataset.count(args.geodatabase)))
+        logger.error('Child count returned {0}'.format(cscldataset.count(args.childgeodatabase)))
+        raise ValueError('Failed to get counts, check the logs')
 
     if badkount == 0:
         logger.info('PASS: summary all checks of {0} on {1}'.format(args.dataset

@@ -12,6 +12,7 @@ class CSCLDatasetTestCase(unittest.TestCase):
                                                      ,".."))
 
         self.borough       = cscl_dataset.CSCLDataset('Borough')
+        self.upperborough  = cscl_dataset.CSCLDataset('BOROUGH')
 
         self.sourcegdb     = os.path.join(self.repo_root
                                          ,'testdata'
@@ -62,8 +63,7 @@ class CSCLDatasetTestCase(unittest.TestCase):
 
     def test_dpyversion(self):
 
-        self.assertEqual({self.borough.is_py2, self.borough.is_py3}
-                        ,{True, False})
+        self.assertTrue(self.borough.arcpyversion in (2,3)) 
 
     def test_eattributeexists(self):
 
@@ -232,6 +232,18 @@ class CSCLDatasetTestCase(unittest.TestCase):
             self.borough.attribute_exists(self.nonexistentgdb
                                          ,'BoroName'
                                          ,'Manhattan')
+
+    def test_jupperfeatureclass(self):
+
+        self.assertEqual(self.upperborough.name
+                        ,'BOROUGH')
+
+        self.assertIsNone(self.upperborough.featuredataset)
+
+        self.assertEqual(self.upperborough.gdbtype
+                        ,'featureclass')
+
+        self.assertTrue(self.upperborough.istable)
                                                           
 
 if __name__ == '__main__':
