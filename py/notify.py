@@ -33,9 +33,11 @@ def main():
     
     msg = EmailMessage()
 
-    # notification is like "passed: a very important thing (stg)"
+    # notification is like "QA: a very important thing (stg)"
+    # in this repo we only notify on QA. Do not prepend notifications 
+    # with "Completed: " or other re-assuring words
 
-    content  = 'Completed {0} '.format(pnotification)
+    content  = '{0} '.format(pnotification)
     msg['Subject'] = content
     content += 'at {0} {1}'.format(datetime.datetime.now()
                                   ,os.linesep)
