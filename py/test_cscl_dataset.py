@@ -163,6 +163,39 @@ class CSCLDatasetTestCase(unittest.TestCase):
         self.assertFalse(self.borough.attribute_exists(self.sourcegdb
                                                      ,'Shape_Area'
                                                      ,'1186614016.224500'))
+
+        # find null. best practice is to use None
+        self.assertTrue(self.borough.attribute_exists(self.badtargetgdb
+                                                     ,'BoroName'
+                                                     ,None))
+        # find null. we will coerce empty string to None
+        self.assertTrue(self.borough.attribute_exists(self.badtargetgdb
+                                                     ,'BoroName'
+                                                     ,''))
+
+        # confirm we can find nulls in numeric columns
+        self.assertTrue(self.borough.attribute_exists(self.badtargetgdb
+                                                     ,'BoroCode'
+                                                     ,None))
+        self.assertTrue(self.borough.attribute_exists(self.badtargetgdb
+                                                     ,'BoroCode'
+                                                     ,''))
+
+        # check good gdb for Null in string column should return False
+        self.assertFalse(self.borough.attribute_exists(self.sourcegdb
+                                                      ,'BoroName'
+                                                      ,None))                                         
+        self.assertFalse(self.borough.attribute_exists(self.sourcegdb
+                                                      ,'BoroName'
+                                                      ,''))
+
+        # check good gdb for Null in numeric column should return False
+        self.assertFalse(self.borough.attribute_exists(self.sourcegdb
+                                                      ,'BoroCode'
+                                                      ,None))                                         
+        self.assertFalse(self.borough.attribute_exists(self.sourcegdb
+                                                      ,'BoroCode'
+                                                      ,''))
         
     def test_ffilterschema(self): 
 

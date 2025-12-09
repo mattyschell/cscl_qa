@@ -172,16 +172,25 @@ class CSCLDataset(object):
             field_type = self._get_field_type(gdb
                                              ,column)
 
-            if field_type == 'String':
+            if attribute == '' or attribute == None:
+                targetattribute = None
+            elif field_type == 'String' and attribute is not None:
                 targetattribute = attribute.lower()
             else:
-                # string input attribute should be made to match the storage datatype
+                # if storage string, the attribute here should be 
+                # forced to match the storage datatype
                 targetattribute = self._safe_to_number(attribute)
 
             def matches(value):
-                if value is None:
+                if (value is None or value == "") and targetattribute is not None:
+                    # esri: empty string and None have different semantics
+                    # mschell: "whats a semantic?" 
                     return False
-                if field_type == 'String':
+                elif (value is None or value == "") and targetattribute is None:
+                    return True
+                elif value is not None and targetattribute is None:
+                    return False
+                elif field_type == 'String':
                     if (fuzzy and targetattribute in value.lower()):
                         return True
                     elif targetattribute == value.lower():
@@ -189,7 +198,7 @@ class CSCLDataset(object):
                     else:
                         return False
                 else:
-                    #print('comparing {0} to {1}'.format(value, targetattribute))
+                    # numeric or... more
                     return value == targetattribute
 
             return any(
