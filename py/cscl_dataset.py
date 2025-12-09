@@ -129,7 +129,7 @@ class CSCLDataset(object):
             num = float(value)
             return int(num) if num.is_integer() else num
         except (ValueError, TypeError):
-            return value
+            return value       
 
     def exists(self
               ,gdb):

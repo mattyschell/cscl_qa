@@ -33,7 +33,7 @@ def main():
     parser.add_argument("dataset", help="Dataset name in cscl")
     parser.add_argument("geodatabase", help="Path to the cscl geodatabase version")
     parser.add_argument("logdir", help="Folder for logs")
-    parser.add_argument("badattribute", help="Known junk value (ex junk)")
+    parser.add_argument("badattribute", help="Known junk value (ex junk, JUNK) Case insensitive.")
     parser.add_argument("badattributecolumn", help="Column to check for junk")
 
     args = parser.parse_args()
