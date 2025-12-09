@@ -25,6 +25,9 @@ def setuplogger(loggername
 
     logger.addHandler(file_handler)
 
+def empty_to_none(value):
+    return None if value == "" else value
+
 def main():
 
     parser = argparse.ArgumentParser(description="QA a CSCL dataset")
@@ -33,7 +36,9 @@ def main():
     parser.add_argument("dataset", help="Dataset name in cscl")
     parser.add_argument("geodatabase", help="Path to the cscl geodatabase version")
     parser.add_argument("logdir", help="Folder for logs")
-    parser.add_argument("badattribute", help="Known junk value (ex junk, JUNK) Case insensitive.")
+    parser.add_argument("badattribute"
+                       ,help="Known junk value (ex junk, JUNK) Case insensitive."
+                       ,type=empty_to_none)
     parser.add_argument("badattributecolumn", help="Column to check for junk")
 
     args = parser.parse_args()

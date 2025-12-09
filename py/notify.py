@@ -3,8 +3,23 @@ import datetime
 import glob
 import os
 import smtplib
-import socket
-from email.message import EmailMessage
+
+
+def ConditionalEmail():
+    try:
+        from email.message import EmailMessage
+    except ImportError:
+        from email.mime.multipart import MIMEMultipart
+        from email.mime.text import MIMEText
+
+        class EmailMessage(MIMEMultipart):
+            def __init__(self):
+                MIMEMultipart.__init__(self)
+
+            def set_content(self, text, subtype='plain'):
+                self.attach(MIMEText(text, subtype))
+
+    return EmailMessage()
 
 
 def getlogfile(logdir
@@ -31,7 +46,7 @@ def main():
     pemailfrom      = sys.argv[5]
     psmtpfrom       = sys.argv[6]
     
-    msg = EmailMessage()
+    msg = ConditionalEmail()
 
     # notification is like "QA: a very important thing (stg)"
     # in this repo we only notify on QA. Do not prepend notifications 
