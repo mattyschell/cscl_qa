@@ -2,7 +2,9 @@ scratch/*
 */logs/*
 .pyc
 *__pycache__*
-test-*.bat
+*.bat
+!sample-*.bat
+!testall.bat
 *.pyc
 dev-*
 stg-*
