@@ -28,15 +28,18 @@ def main():
 
     parser = argparse.ArgumentParser(description="QA a child CSCL dataset")
 
-    # Required arguments
     parser.add_argument("dataset", help="Dataset name in cscl")
-    parser.add_argument("geodatabase", help="Path to the parent cscl geodatabase")
-    parser.add_argument("childgeodatabase", help="Path to the child cscl geodatabase")
+    parser.add_argument("geodatabase"
+                       ,help="Path to the parent cscl geodatabase")
+    parser.add_argument("childgeodatabase"
+                       ,help="Path to the child cscl geodatabase")
     parser.add_argument("logdir", help="Folder for logs")
-
-    parser.add_argument("--badattribute", help="Known junk value (ex junk)", default=None)
-    parser.add_argument("--badattributecolumn", help="Column to check for junk", default=None)
-    parser.add_argument("--deltastart", help="Known count difference on the child", default=0)
+    parser.add_argument("--badattribute"
+                       ,help="Known junk value (ex junk)", default=None)
+    parser.add_argument("--badattributecolumn"
+                       ,help="Column to check for junk", default=None)
+    parser.add_argument("--deltastart"
+                       ,help="Known count difference on the child", default=0)
 
     args = parser.parse_args()
 
