@@ -210,10 +210,10 @@ class CSCLDatasetTestCase(unittest.TestCase):
         self.assertEqual(self.boroughwithschema.gdbtype
                         ,'featureclass')
 
-        self.assertTrue(self.boroughwithschema.istable)
+        self.assertTrue(self.boroughwithschema.istable)   
 
-        self.assertEqual(self.boroughwithschema.datasetpath
-                       ,'MALTAGOYA.Borough')     
+        # this should drop the schema when checking a file geodatabase
+        self.assertTrue(self.boroughwithschema.exists(self.sourcegdb)) 
 
     def test_gschemaandfeaturedataset(self):
         
@@ -231,9 +231,11 @@ class CSCLDatasetTestCase(unittest.TestCase):
 
         self.assertTrue(self.rail_schema_featuredataset.istable)
 
-        # this may not be correct but for now it is what it is
-        self.assertEqual(self.rail_schema_featuredataset.datasetpath
-                       ,'MALTAGOYA.CSCL\MALTAGOYA.Rail')     
+        #TODO create a feature dataset and the rail fc so we can test 
+        # file geodatabase schema scrubbing of FD and FC
+        # with a file geodatabase MALTAGOYAs should be filtered
+        # 'MALTAGOYA.CSCL\\MALTAGOYA.Rail' --> CSCL\\Rail
+        #self.assertTrue(self.rail_schema_featuredataset.exists(self.sourcegdb))  
 
     def test_hattributedrelationshipclass(self):
         
@@ -250,12 +252,10 @@ class CSCLDatasetTestCase(unittest.TestCase):
 
         self.assertTrue(self.subwaystationshavefeaturenames.istable)
 
-        self.assertEqual(self.subwaystationshavefeaturenames.datasetpath
-                       ,'MALTAGOYA.SubwayStationsHaveFeatureNames') 
-
     def test_ibadgdbraises(self): 
         
-        with self.assertRaises(ValueError):
+        # py 2 vs 3 differences
+        with self.assertRaises((ValueError,IOError,OSError)):
             self.borough.exists(self.nonexistentgdb)
 
         with self.assertRaises(ValueError):
@@ -278,6 +278,5 @@ class CSCLDatasetTestCase(unittest.TestCase):
 
         self.assertTrue(self.upperborough.istable)
                                                           
-
 if __name__ == '__main__':
     unittest.main()

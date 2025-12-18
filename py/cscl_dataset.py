@@ -10,8 +10,12 @@ class CSCLDataset(object):
                 ,dataset):
          
         self.dataset = dataset
+
+        # usually CSCL.xyz
+        # but we allow xyz if the caller uses a file geodatabase or the caller is CSCL
         self.owner, self.name = self._filterschema()
 
+        # TBD on using this property.  Some commits yes, some no.
         if sys.version_info[0] == 2:
             self.arcpyversion = 2
         elif sys.version_info[0] == 3:
@@ -24,17 +28,17 @@ class CSCLDataset(object):
         # if this dataset is a part of of a deceitful featuredataset
         # this is the deceitful name (spoiler: its CSCL)
         self.featuredataset = self._get_featuredataset()
+  
+    def _get_dataset_path(self
+                         ,owner=None):
+
+        fc = "%s.%s" % (owner, self.name) if owner else self.name
 
         if self.featuredataset is None:
-            self.datasetpath = self.dataset
-        else:
-            if self.owner is None:
-                self.datasetpath = os.path.join(self.featuredataset
-                                               ,self.dataset)  
-            else:
-                self.datasetpath = os.path.join('{0}.{1}'.format(self.owner
-                                                                ,self.featuredataset)
-                                               ,self.dataset)  
+            return fc
+        else:    
+            fd = "%s.%s" % (owner, self.featuredataset) if owner else self.featuredataset
+            return os.path.join(fd,fc)
 
     def _get_cscl_list(self
                       ,whichlist):
@@ -50,7 +54,7 @@ class CSCLDataset(object):
 
     def _filterschema(self):
 
-        # input like CSCL.BOROUGH jdoe.Foo or just Borough
+        # inputs CSCL.BOROUGH jdoe.Foo Borough Foo
 
         if '.' in self.dataset:
             return self.dataset.partition('.')[0], self.dataset.partition('.')[2]
@@ -94,7 +98,10 @@ class CSCLDataset(object):
 
     def _get_tupletypes(self):
 
-        if self.gdbtype in ('featureclass','featuretable','archiveclass','attributedrelationshipclass'): 
+        if self.gdbtype in ('featureclass'
+                           ,'featuretable'
+                           ,'archiveclass'
+                           ,'attributedrelationshipclass'): 
             return True
         else:
             return False
@@ -103,7 +110,7 @@ class CSCLDataset(object):
                        ,gdb
                        ,field_name):
 
-        fields = arcpy.ListFields(os.path.join(gdb, self.datasetpath)
+        fields = arcpy.ListFields(os.path.join(gdb, self._get_path_in_gdb(gdb))
                                  ,field_name)
 
         return fields[0].type # string, integer, double, etc
@@ -129,13 +136,29 @@ class CSCLDataset(object):
             num = float(value)
             return int(num) if num.is_integer() else num
         except (ValueError, TypeError):
-            return value       
+            return value  
+
+    def _get_path_in_gdb(self
+                        ,gdb):
+
+        # we typically initialize using an enterprise geodatabase
+        # but children may be in a file geodatabase without schema owners
+
+        # workspaceFactoryProgID is only available in pro python
+        desc = arcpy.Describe(gdb)
+
+        if (desc.workspaceType.endswith('LocalDatabase') 
+        or  desc.workspaceFactoryProgID.endswith('FileGDBWorkspaceFactory')):
+            # get path without owner
+            return self._get_dataset_path()
+        else:
+            return self._get_dataset_path(self.owner)          
 
     def exists(self
               ,gdb):
 
         if (self._gdb_exists(gdb) and \
-            arcpy.Exists(os.path.join(gdb, self.datasetpath))):
+            arcpy.Exists(os.path.join(gdb, self._get_path_in_gdb(gdb)))):
             return True
         else:
             return False   
@@ -147,12 +170,12 @@ class CSCLDataset(object):
             self.istable):
             try:
                 kount = int(arcpy.management.GetCount(os.path.join(gdb
-                                                                  ,self.datasetpath))[0])
+                                                                  ,self._get_path_in_gdb(gdb)))[0])
                 return kount
             except arcpy.ExecuteError:
                 # this typically means arcpy3 hitting a legacy dataset with class extensions
                 raise ValueError('Couldnt get a count for ' \
-                                '{0} using arcpy {1}. Details: {2}'.format(os.path.join(gdb,self.datasetpath)
+                                '{0} using arcpy {1}. Details: {2}'.format(os.path.join(gdb,self._get_path_in_gdb(gdb))
                                                                           ,self.arcpyversion
                                                                           ,arcpy.GetMessages(2)))
         else:
@@ -203,7 +226,7 @@ class CSCLDataset(object):
 
             return any(
                 matches(row[0])
-                for row in arcpy.da.SearchCursor(os.path.join(gdb, self.datasetpath)
+                for row in arcpy.da.SearchCursor(os.path.join(gdb, self._get_path_in_gdb(gdb))
                                                 ,[column])
             )
         except arcpy.ExecuteError:

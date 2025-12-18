@@ -25,7 +25,7 @@ options:
 
 ### QA a child replica dataset
 
-Report bad counts and suspect values in a parent-child dataset pair.
+Report bad counts and (optionally) suspect values in a parent-child dataset pair.
 
 ```text
 usage: qa_child_dataset.py [-h] [--badattribute BADATTRIBUTE] [--badattributecolumn BADATTRIBUTECOLUMN]
