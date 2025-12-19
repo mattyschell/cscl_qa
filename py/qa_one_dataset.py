@@ -8,18 +8,18 @@ import arcpy
 import cscl_dataset
 
 def setuplogger(loggername
-               ,datasetname
-               ,logdirectory):
+               ,logname
+               ,logdirectory
+               ,logmode):
 
     # ..geodatabase-scripts\logs\qa-borough-DEFAULT-20250403-160745.log
     targetlog = os.path.join(logdirectory 
-                            ,'qa-{0}-{1}.log'.format(datasetname
-                                                    ,time.strftime("%Y%m%d-%H%M%S")))
+                            ,'{0}.log'.format(logname))
 
     logger = logging.getLogger(loggername)
     logger.setLevel(logging.INFO)
 
-    file_handler = logging.FileHandler(targetlog, mode='w')
+    file_handler = logging.FileHandler(targetlog, mode=logmode)
     formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
     file_handler.setFormatter(formatter)
 
@@ -36,6 +36,8 @@ def main():
     parser.add_argument("dataset", help="Dataset name in cscl")
     parser.add_argument("geodatabase", help="Path to the cscl geodatabase version")
     parser.add_argument("logdir", help="Folder for logs")
+    parser.add_argument("logname", help="Name of log")
+    parser.add_argument("logmode", help="w(rite) or a(ppend)")
     parser.add_argument("badattribute"
                        ,help="Known junk value (ex junk, JUNK) Case insensitive."
                        ,type=empty_to_none)
@@ -43,13 +45,18 @@ def main():
 
     args = parser.parse_args()
 
-    gdbversion = arcpy.Describe(args.geodatabase).connectionProperties.version.split('.')[-1]
+    gdbversion = (
+    arcpy.Describe(args.geodatabase)
+         .connectionProperties
+         .version
+         .split('.')[-1]
+    )
 
-    # add version to log name since qa_child_dataset.py logs use only dataset
-    setuplogger('qa_dataset'
-               ,'{0}-{1}'.format(args.dataset, gdbversion)
-               ,args.logdir)
-    logger = logging.getLogger('qa_dataset')
+    setuplogger('qa_one_dataset'
+               ,args.logname
+               ,args.logdir
+               ,args.logmode)
+    logger = logging.getLogger('qa_one_dataset')
 
     logger.info('starting qa of {0} {1}'.format(args.dataset
                                                ,args.badattributecolumn))
