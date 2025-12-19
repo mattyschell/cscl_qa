@@ -12,7 +12,13 @@ def setuplogger(loggername
                ,logdirectory
                ,logmode):
 
-    # ..geodatabase-scripts\logs\qa-borough-DEFAULT-20250403-160745.log
+    # if QAing several datasets in a version we re-use the version as the log
+    #   geodatabase-scripts\logs\qa-abcworkversion.log
+    # otherwise 
+    #   geodatabase-scripts\logs\qa-borough-DEFAULT.log
+    # the notification script will stash these with unique names when QA 
+    #   qa-abcworkversion-20251218-150305.log
+
     targetlog = os.path.join(logdirectory 
                             ,'{0}.log'.format(logname))
 
@@ -27,6 +33,9 @@ def setuplogger(loggername
 
 def empty_to_none(value):
     return None if value == "" else value
+
+def none_to_null(value):
+    return 'NULL' if value is None else value
 
 def main():
 
@@ -68,14 +77,21 @@ def main():
                                    ,args.badattributecolumn
                                    ,args.badattribute):
         badkount +=1
-        logger.warning('QA: bad {0} value {1} checking version {2}'.format(args.badattributecolumn
-                                                                            ,args.badattribute
-                                                                            ,gdbversion))  
+        logger.warning(
+            'QA: bad value {0} in {1} checking version {2}'.format(
+                none_to_null(args.badattribute)
+               ,args.badattributecolumn
+               ,gdbversion
+               )
+            )  
     else:
-        logger.info('PASS: no value {0} in {1} checking version {2}'.format(args.badattribute
-                                                                            ,args.badattributecolumn
-                                                                            ,gdbversion)) 
-
+        logger.info(
+            'PASS: no value {0} in {1} checking version {2}'.format(
+                none_to_null(args.badattribute)
+               ,args.badattributecolumn
+               ,gdbversion
+               )
+            ) 
     sys.exit(badkount)
 
 if __name__ == '__main__':
