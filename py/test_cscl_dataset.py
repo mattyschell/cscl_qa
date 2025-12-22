@@ -35,6 +35,8 @@ class CSCLDatasetTestCase(unittest.TestCase):
         self.rail_schema_featuredataset     = cscl_dataset.CSCLDataset('MALTAGOYA.Rail')
         self.subwaystationshavefeaturenames = cscl_dataset.CSCLDataset('MALTAGOYA.SubwayStationsHaveFeatureNames')
 
+        self.borougharchive                 = cscl_dataset.CSCLDataset('MALTAGOYA.BOROUGH_H')
+
     def test_afeatureclass(self):
         
         self.assertEqual(self.borough.name
@@ -46,6 +48,9 @@ class CSCLDatasetTestCase(unittest.TestCase):
                         ,'featureclass')
 
         self.assertTrue(self.borough.istable)
+
+        self.assertEqual(self.borough.businesskey
+                        ,'BOROCODE')
 
     def test_bfeatureclassexists(self):
 
@@ -252,6 +257,9 @@ class CSCLDatasetTestCase(unittest.TestCase):
 
         self.assertTrue(self.subwaystationshavefeaturenames.istable)
 
+        self.assertEqual(self.subwaystationshavefeaturenames.businesskey
+                        ,'GLOBALID')
+
     def test_ibadgdbraises(self): 
         
         # py 2 vs 3 differences
@@ -277,6 +285,19 @@ class CSCLDatasetTestCase(unittest.TestCase):
                         ,'featureclass')
 
         self.assertTrue(self.upperborough.istable)
-                                                          
+
+    def test_kbusinesskey(self):
+
+        self.assertEqual(self.borough.businesskey
+                        ,'BOROCODE')
+
+        self.assertEqual(self.boroughwithschema.businesskey
+                        ,'BOROCODE')
+
+        # we have not fully populated resources/allbusinesskey
+        # also some item types will never have business keys
+        self.assertIsNone(self.borougharchive.businesskey)
+
+
 if __name__ == '__main__':
     unittest.main()

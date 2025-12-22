@@ -22,8 +22,9 @@ class CSCLDataset(object):
             self.arcpyversion = 3
 
         # featureclass, featuredataset, etc
-        self.gdbtype = self._get_gdb_type()
-        self.istable = self._get_tupletypes()
+        self.gdbtype     = self._get_gdb_type()
+        self.istable     = self._get_tupletypes()
+        self.businesskey = self._get_businesskey()
 
         # if this dataset is a part of of a deceitful featuredataset
         # this is the deceitful name (spoiler: its CSCL)
@@ -57,7 +58,8 @@ class CSCLDataset(object):
         # inputs CSCL.BOROUGH jdoe.Foo Borough Foo
 
         if '.' in self.dataset:
-            return self.dataset.partition('.')[0], self.dataset.partition('.')[2]
+            return (self.dataset.partition('.')[0]
+                   ,self.dataset.partition('.')[2])
         else:
             return None, self.dataset
 
@@ -80,6 +82,15 @@ class CSCLDataset(object):
         
         if itemtype is None:
             raise ValueError('{0} does not appear in our lists of resources'.format(self.name))
+
+    def _get_businesskey(self):
+
+        #for datasetkey in self._get_cscl_list('allbusinesskey'):
+
+        lookup = {k:v for k, v in (item.split() for 
+            item in self._get_cscl_list('allbusinesskey'))}
+
+        return lookup.get(self.name.upper())
   
     def _get_featuredataset(self):
 
