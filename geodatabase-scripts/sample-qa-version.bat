@@ -3,6 +3,7 @@ set ENV=xxx
 set BASEPATH=X:\xxx
 set DB=xxxxxxx
 set LOGDIR=%BASEPATH%\geodatabase-scripts\logs\cscl_qa
+set LOGMODE=w
 set CSCLLAYER1=xxxx.xxxxxxxxx
 set QAVALUE1=""
 set QACOLUMN1=xxxxxxxx
@@ -28,30 +29,37 @@ CALL %PROPY% %BASEPATH%\cscl_qa\py\qa_one_dataset.py ^
              %CSCLLAYER1% ^
              %CSCLGDB% ^
              %LOGDIR% ^
+             QA-%QAVERSION% ^
+             %LOGMODE% ^
              %QAVALUE1% ^
              %QACOLUMN1%  
 if %ERRORLEVEL% NEQ 0 (
     set /a FAILCOUNT+=1
     echo. >> %BATLOG%
-    echo QA fail sending notification >> %BATLOG%
-    CALL %PROPY% %BASEPATH%\cscl_qa\py\notify.py "QA Report for %CSCLLAYER1% (%ENV%)" %NOTIFY% qa-%CSCLLAYER1%-%QAVERSION% %LOGDIR% %NOTIFYFROM% %SMTPFROM%
+    echo QA fail for %CSCLLAYER1% >> %BATLOG%
+    rem CALL %PROPY% %BASEPATH%\cscl_qa\py\notify.py "QA Report for %CSCLLAYER1% (%ENV%)" %NOTIFY% qa-%QAVERSION% %LOGDIR% %NOTIFYFROM% %SMTPFROM%
 ) 
 echo. >> %BATLOG% && echo completed %ENV% %CSCLLAYER1% on %date% at %time% >> %BATLOG%
 echo QAing %ENV% %CSCLLAYER2% on %date% at %time% > %BATLOG%
+set LOGMODE=a
 CALL %PROPY% %BASEPATH%\cscl_qa\py\qa_one_dataset.py ^
              %CSCLLAYER2% ^
              %CSCLGDB% ^
              %LOGDIR% ^
+             QA-%QAVERSION% ^
+             %LOGMODE% ^
              %QAVALUE2% ^
              %QACOLUMN2%  
 if %ERRORLEVEL% NEQ 0 (
     set /a FAILCOUNT+=1
     echo. >> %BATLOG%
-    echo QA fail sending notification >> %BATLOG%
-    CALL %PROPY% %BASEPATH%\cscl_qa\py\notify.py "QA Report for %CSCLLAYER2% (%ENV%)" %NOTIFY% qa-%CSCLLAYER2%-%QAVERSION% %LOGDIR% %NOTIFYFROM% %SMTPFROM%
+    echo QA fail for %CSCLLAYER2% >> %BATLOG%
+    rem CALL %PROPY% %BASEPATH%\cscl_qa\py\notify.py "QA Report for %CSCLLAYER2% (%ENV%)" %NOTIFY% qa-%QAVERSION% %LOGDIR% %NOTIFYFROM% %SMTPFROM%
 ) 
 echo. >> %BATLOG% && echo completed %ENV% %CSCLLAYER2% on %date% at %time% >> %BATLOG%
-if %FAILCOUNT% NEQ 0 (
+if %FAILCOUNT% GTR 0 (
+    echo Sending combined QA notification >> %BATLOG%
+    CALL %PROPY% %BASEPATH%\cscl_qa\py\notify.py "QA Report for %QAVERSION% (%ENV%)" %NOTIFY% QA-%QAVERSION% %LOGDIR% %NOTIFYFROM% %SMTPFROM%
     echo    .------.    .------.    .------.
     echo   /  STOP  \  /  STOP  \  /  STOP  \
     echo   \   QA   /  \   QA   /  \   QA   /
@@ -64,5 +72,4 @@ if %FAILCOUNT% NEQ 0 (
     pause
 )
 exit /b 0
-
    
