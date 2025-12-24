@@ -8,8 +8,9 @@ class CSCLDatasetTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(self):
 
-        self.repo_root     = os.path.abspath(os.path.join(os.path.dirname(__file__)
-                                                     ,".."))
+        self.repo_root     = os.path.abspath(
+                                os.path.join(os.path.dirname(__file__)
+                                            ,".."))
 
         self.borough       = cscl_dataset.CSCLDataset('Borough')
         self.upperborough  = cscl_dataset.CSCLDataset('BOROUGH')
@@ -28,14 +29,24 @@ class CSCLDatasetTestCase(unittest.TestCase):
                                           ,'testdata'
                                           ,'maltagoya.gdb')
         
+        # these exist in the test data (sans schema)
+        # schema management is a firm requirement because when 
+        # possible we will run QA from a read-only user
+        self.boroughwithschema = (
+            cscl_dataset.CSCLDataset('MALTAGOYA.Borough')
+        )
+        self.rail_schema_featuredataset = (    
+            cscl_dataset.CSCLDataset('MALTAGOYA.Rail')
+        )
         # no test data for these but we test the resource wrangling
-        # schema is a firm requirement because when possible 
-        # we will run QA from a read-only user
-        self.boroughwithschema              = cscl_dataset.CSCLDataset('MALTAGOYA.Borough')
-        self.rail_schema_featuredataset     = cscl_dataset.CSCLDataset('MALTAGOYA.Rail')
-        self.subwaystationshavefeaturenames = cscl_dataset.CSCLDataset('MALTAGOYA.SubwayStationsHaveFeatureNames')
-
-        self.borougharchive                 = cscl_dataset.CSCLDataset('MALTAGOYA.BOROUGH_H')
+        self.subwaystationshavefeaturenames = (
+            cscl_dataset.CSCLDataset(
+                'MALTAGOYA.SubwayStationsHaveFeatureNames'
+                )
+        )
+        self.borougharchive = (
+            cscl_dataset.CSCLDataset('MALTAGOYA.BOROUGH_H')
+        )
 
     def test_afeatureclass(self):
         
@@ -89,6 +100,7 @@ class CSCLDatasetTestCase(unittest.TestCase):
                                                       ,6))
 
         # fuzzy match
+        # the actual value in the test data is "Staten junk Island"
         self.assertTrue(self.borough.attribute_exists(self.badtargetgdb
                                                      ,'BoroName'
                                                      ,'JUNK'))
@@ -116,7 +128,8 @@ class CSCLDatasetTestCase(unittest.TestCase):
                                                      ,'BoroCode'
                                                      ,1))
 
-        # argparse inputs from python scripts will treat the attribute as a string
+        # argparse inputs from python scripts will 
+        # treat the attribute as a string
         # input attributes should be made to match the storage datatype
         # borocode is numeric '1' should be converted to 1 and match
         self.assertTrue(self.borough.attribute_exists(self.sourcegdb
@@ -138,7 +151,7 @@ class CSCLDatasetTestCase(unittest.TestCase):
         # this precision is not necessarily displayed in catalog
         # here we are at the limits of floating point numbers
         #     catalog shows 1186614016.2245
-        # in contrast Staten Island shows 1623758505.75111 and that is the match
+        # Staten Island shows 1623758505.75111 and that is the match
         # exact match
         self.assertTrue(self.borough.attribute_exists(self.sourcegdb
                                                      ,'Shape_Area'
@@ -236,11 +249,17 @@ class CSCLDatasetTestCase(unittest.TestCase):
 
         self.assertTrue(self.rail_schema_featuredataset.istable)
 
-        #TODO create a feature dataset and the rail fc so we can test 
-        # file geodatabase schema scrubbing of FD and FC
-        # with a file geodatabase MALTAGOYAs should be filtered
-        # 'MALTAGOYA.CSCL\\MALTAGOYA.Rail' --> CSCL\\Rail
-        #self.assertTrue(self.rail_schema_featuredataset.exists(self.sourcegdb))  
+        self.assertTrue(self.rail_schema_featuredataset.exists(self.sourcegdb))
+
+        self.assertEqual(self.rail_schema_featuredataset.count(self.sourcegdb)
+                        ,0)  
+
+        self.assertFalse(
+            self.rail_schema_featuredataset.attribute_exists(
+                self.sourcegdb
+               ,'SegmentId'
+               ,123456789)  
+            )
 
     def test_hattributedrelationshipclass(self):
         

@@ -37,7 +37,6 @@ if %ERRORLEVEL% NEQ 0 (
     set /a FAILCOUNT+=1
     echo. >> %BATLOG%
     echo QA fail for %CSCLLAYER1% >> %BATLOG%
-    rem CALL %PROPY% %BASEPATH%\cscl_qa\py\notify.py "QA Report for %CSCLLAYER1% (%ENV%)" %NOTIFY% qa-%QAVERSION% %LOGDIR% %NOTIFYFROM% %SMTPFROM%
 ) 
 echo. >> %BATLOG% && echo completed %ENV% %CSCLLAYER1% on %date% at %time% >> %BATLOG%
 echo QAing %ENV% %CSCLLAYER2% on %date% at %time% > %BATLOG%
@@ -54,7 +53,6 @@ if %ERRORLEVEL% NEQ 0 (
     set /a FAILCOUNT+=1
     echo. >> %BATLOG%
     echo QA fail for %CSCLLAYER2% >> %BATLOG%
-    rem CALL %PROPY% %BASEPATH%\cscl_qa\py\notify.py "QA Report for %CSCLLAYER2% (%ENV%)" %NOTIFY% qa-%QAVERSION% %LOGDIR% %NOTIFYFROM% %SMTPFROM%
 ) 
 echo. >> %BATLOG% && echo completed %ENV% %CSCLLAYER2% on %date% at %time% >> %BATLOG%
 if %FAILCOUNT% GTR 0 (
