@@ -4,6 +4,7 @@ import sys
 import logging
 import argparse
 
+from logging_utils import setuplogger
 import cscl_dataset
 
 # This is a specific QA task for replicas
@@ -21,24 +22,6 @@ import cscl_dataset
 #   3. The bad temp data is in parent and child
 # This script checks 1 2 and 3
 
-def setuplogger(loggername
-               ,datasetname
-               ,logdirectory):
-
-    # ..geodatabase-scripts\logs\qa-borough-20250403-160745.log
-    targetlog = os.path.join(logdirectory 
-                            ,'qa-{0}-{1}.log'.format(
-                                datasetname
-                               ,time.strftime("%Y%m%d-%H%M%S")))
-
-    logger = logging.getLogger(loggername)
-    logger.setLevel(logging.INFO)
-
-    file_handler = logging.FileHandler(targetlog, mode='w')
-    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-    file_handler.setFormatter(formatter)
-
-    logger.addHandler(file_handler)
 
 def main():
 
@@ -61,7 +44,9 @@ def main():
 
     setuplogger('qa_child_dataset'
                ,args.dataset
-               ,args.logdir)
+               ,args.logdir
+               ,'w') # qa_child_dataset does not append
+
     logger = logging.getLogger('qa_child_dataset')
 
     logger.info('starting qa of {0}'.format(args.dataset))
@@ -72,33 +57,38 @@ def main():
     badkount    = 0
 
     if args.badattributecolumn and args.badattribute:
-        if cscldataset.attribute_exists(args.geodatabase
-                                       ,args.badattributecolumn
-                                       ,args.badattribute):
-            badkount +=1
-            logger.warning(
-                'QA: bad {0} value {1} on parent'.format(
-                    args.badattributecolumn
-                   ,args.badattribute))  
-        else:
-            logger.info(
-                'PASS: no value {0} in {1} on parent'.format(
-                    args.badattribute
-                   ,args.badattributecolumn))                        
+        try:
+            if cscldataset.attribute_exists(args.geodatabase
+                                        ,args.badattributecolumn
+                                        ,args.badattribute):
+                badkount +=1
+                logger.warning(
+                    'QA: bad {0} value {1} on parent'.format(
+                        args.badattributecolumn
+                    ,args.badattribute))  
+            else:
+                logger.info(
+                    'PASS: no value {0} in {1} on parent'.format(
+                        args.badattribute
+                    ,args.badattributecolumn))                        
 
-        if cscldataset.attribute_exists(args.childgeodatabase
-                                       ,args.badattributecolumn
-                                       ,args.badattribute):
+            if cscldataset.attribute_exists(args.childgeodatabase
+                                        ,args.badattributecolumn
+                                        ,args.badattribute):
+                badkount +=1
+                logger.warning(
+                    'QA: bad {0} value {1} on child'.format(
+                        args.badattributecolumn
+                    ,args.badattribute))  
+            else:
+                logger.info(
+                    'PASS: no value {0} in {1} on child'.format(
+                        args.badattribute
+                    ,args.badattributecolumn)) 
+        except Exception: 
+            logger.exception("Fatal error while checking if attribute exists")
             badkount +=1
-            logger.warning(
-                'QA: bad {0} value {1} on child'.format(
-                    args.badattributecolumn
-                   ,args.badattribute))  
-        else:
-            logger.info(
-                'PASS: no value {0} in {1} on child'.format(
-                    args.badattribute
-                   ,args.badattributecolumn)) 
+            sys.exit(badkount)
 
     try:
 
@@ -128,6 +118,11 @@ def main():
             'Child count returned {0}'.format(
                 cscldataset.count(args.childgeodatabase)))
         raise ValueError('Failed to get counts, check the logs')
+    except Exception:
+        logger.exception("Fatal error while getting counts")
+    finally:
+        badkount +=1
+        sys.exit(badkount)    
 
     if badkount == 0:
         logger.info(
