@@ -15,7 +15,7 @@ class CSCLDataset(object):
         # but we allow xyz if the caller uses a file geodatabase or the caller is CSCL
         self.owner, self.name = self._filterschema()
 
-        # TBD on using this property.  Some commits yes, some no.
+        # using in error messages
         if sys.version_info[0] == 2:
             self.arcpyversion = 2
         elif sys.version_info[0] == 3:
@@ -124,6 +124,13 @@ class CSCLDataset(object):
         fields = arcpy.ListFields(os.path.join(gdb, self._get_path_in_gdb(gdb))
                                  ,field_name)
 
+        if len(fields) == 0:
+            raise ValueError(
+                'Failed to get {0} field type for field {1} using python {2}. '
+                'Check the column name and python version if class extensions '
+                'are present'.format(self._get_path_in_gdb(gdb)
+                                    ,field_name
+                                    ,self.arcpyversion))
         return fields[0].type # string, integer, double, etc
     
     def _gdb_exists(self

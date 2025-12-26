@@ -1,19 +1,19 @@
-set ENV=dev
-set BASEPATH=X:\gis
-set LOGDIR=%BASEPATH%\cscl_qa\geodatabase-scripts\logs
-set CSCLLAYER=CSCL.AttributedRelationShipClass
-set CSCLGDB=%BASEPATH%\Connections\oracle19c\%ENV%\CSCL-xxxxxxxxx\cscl_read_only.sde
-REM fake stg to demo
-set CHILDGDB=%BASEPATH%\Connections\oracle19c\stg\CSCL-xxxxxxxxxxx\cscl_read_only.sde
-set QACOLUMN=SAMPLECOLUMN
-set QAVALUE=123456789
-REM PSGIS, NYPD2, etc
-set DESCRIPTIVECHILDGDB=FAKE
-set NOTIFY=xxx@xxx.xxx.xxx
-set NOTIFYFROM=xxx@xxx.xxx.xxx
-set SMTPFROM=xxxxxxxxx.xxxxxx
-set PYTHON1=C:\Progra~1\ArcGIS\Pro\bin\Python\envs\arcgispro-py3\python.exe
-set PYTHON2=C:\Users\%USERNAME%\AppData\Local\Programs\ArcGIS\Pro\bin\Python\envs\arcgispro-py3\python.exe
+set ENV=xxx
+set BASEPATH=X:\xxx
+set LOGDIR=%BASEPATH%\geodatabase-scripts\log\scscl_qa
+set DB=xxxxxxx
+set CSCLLAYER=xxxx.xxxxxxx
+set CSCLGDB=%BASEPATH%\Connections\oracle19c\%ENV%\CSCL-%DB%\cscl_read_only.sde
+set CHILDGDB=X:\REPLICATIONS\xxx\xxx.sde
+set QACOLUMN=XXXXX_XXXX
+set QAVALUE=XXXX
+set DESCRIPTIVECHILDGDB=XXXX
+set NOTIFY=xxxx@xxx.xxx.xxx
+set NOTIFYFROM=xxxx@xxx.xxx.xxx
+set SMTPFROM=xxxxx.xxxx
+rem if parent includes class extensions must use py2
+set PYTHON1=C:\Python27\ArcGIS10.7\python.exe
+set PYTHON2=C:\Python27\ArcGIS10.8\python.exe
 if exist "%PYTHON1%" (
     set PROPY=%PYTHON1%
 ) else if exist "%PYTHON2%" (
