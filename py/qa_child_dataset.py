@@ -22,6 +22,9 @@ import cscl_dataset
 #   3. The bad temp data is in parent and child
 # This script checks 1 2 and 3
 
+def fail_early(badkount):
+    badkount +=1
+    sys.exit(badkount)
 
 def main():
 
@@ -38,6 +41,7 @@ def main():
     parser.add_argument("--badattributecolumn"
                        ,help="Column to check for junk", default=None)
     parser.add_argument("--deltastart"
+                       ,type=int
                        ,help="Known count difference on the child", default=0)
 
     args = parser.parse_args()
@@ -59,39 +63,38 @@ def main():
     if args.badattributecolumn and args.badattribute:
         try:
             if cscldataset.attribute_exists(args.geodatabase
-                                        ,args.badattributecolumn
-                                        ,args.badattribute):
+                                           ,args.badattributecolumn
+                                           ,args.badattribute):
                 badkount +=1
                 logger.warning(
                     'QA: bad {0} value {1} on parent'.format(
                         args.badattributecolumn
-                    ,args.badattribute))  
+                       ,args.badattribute))  
             else:
                 logger.info(
                     'PASS: no value {0} in {1} on parent'.format(
                         args.badattribute
-                    ,args.badattributecolumn))                        
+                       ,args.badattributecolumn))                        
 
             if cscldataset.attribute_exists(args.childgeodatabase
-                                        ,args.badattributecolumn
-                                        ,args.badattribute):
+                                           ,args.badattributecolumn
+                                           ,args.badattribute):
                 badkount +=1
                 logger.warning(
                     'QA: bad {0} value {1} on child'.format(
                         args.badattributecolumn
-                    ,args.badattribute))  
+                       ,args.badattribute))  
             else:
                 logger.info(
                     'PASS: no value {0} in {1} on child'.format(
                         args.badattribute
-                    ,args.badattributecolumn)) 
+                       ,args.badattributecolumn)) 
         except Exception: 
             logger.exception("Fatal error while checking if attribute exists")
-            badkount +=1
-            sys.exit(badkount)
+            fail_early(badkount)
 
     try:
-
+        # always check counts
         if cscldataset.count(args.geodatabase) != (
             cscldataset.count(args.childgeodatabase) + args.deltastart
             ):
@@ -117,12 +120,10 @@ def main():
         logger.error(
             'Child count returned {0}'.format(
                 cscldataset.count(args.childgeodatabase)))
-        raise ValueError('Failed to get counts, check the logs')
+        fail_early(badkount)
     except Exception:
         logger.exception("Fatal error while getting counts")
-    finally:
-        badkount +=1
-        sys.exit(badkount)    
+        fail_early(badkount)   
 
     if badkount == 0:
         logger.info(

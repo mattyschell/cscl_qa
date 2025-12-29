@@ -30,7 +30,7 @@ CALL %PROPY% %BASEPATH%\cscl_qa\py\qa_child_dataset.py ^
 if %ERRORLEVEL% NEQ 0 (
     echo. >> %BATLOG%
     echo QA fail sending notification >> %BATLOG%
-    CALL %PROPY% %BASEPATH%\cscl_qa\py\notify.py "QA Report for %CSCLLAYER% (%ENV%) on %DESCRIPTIVECHILDGDB%" %NOTIFY% %CSCLLAYER% %LOGDIR% %NOTIFYFROM% %SMTPFROM%
+    CALL %PROPY% %BASEPATH%\cscl_qa\py\notify.py "QA Report for %CSCLLAYER% (%ENV%) on %DESCRIPTIVECHILDGDB% replica" %NOTIFY% %CSCLLAYER% %LOGDIR% %NOTIFYFROM% %SMTPFROM%
     EXIT /B 0
 ) 
 echo. >> %BATLOG% && echo completed %ENV% %CSCLLAYER% on %date% at %time% >> %BATLOG%
