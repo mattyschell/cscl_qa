@@ -48,6 +48,10 @@ class CSCLDatasetTestCase(unittest.TestCase):
             cscl_dataset.CSCLDataset('MALTAGOYA.BOROUGH_H')
         )
 
+        self.sqlserverborough = (
+            cscl_dataset.CSCLDataset('hawaiianpunch.maltagoya.Borough') 
+        )
+
     def test_afeatureclass(self):
         
         self.assertEqual(self.borough.name
@@ -316,6 +320,24 @@ class CSCLDatasetTestCase(unittest.TestCase):
         # we have not fully populated resources/allbusinesskey
         # also some item types will never have business keys
         self.assertIsNone(self.borougharchive.businesskey)
+
+    def test_isqlserver(self):
+
+        self.assertEqual(self.sqlserverborough.name
+                        ,'Borough')
+
+        self.assertEqual(self.sqlserverborough.owner
+                        ,'hawaiianpunch.maltagoya')
+
+        self.assertIsNone(self.sqlserverborough.featuredataset)
+
+        self.assertEqual(self.sqlserverborough.gdbtype
+                        ,'featureclass')
+
+        self.assertTrue(self.sqlserverborough.istable)
+
+        self.assertEqual(self.sqlserverborough.businesskey
+                        ,'BOROCODE')
 
 
 if __name__ == '__main__':

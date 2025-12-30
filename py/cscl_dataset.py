@@ -13,7 +13,7 @@ class CSCLDataset(object):
 
         # usually CSCL.xyz
         # but we allow xyz if the caller uses a file geodatabase or the caller is CSCL
-        self.owner, self.name = self._filterschema()
+        self.owner, self.name = self._filterowner()
 
         # using in error messages
         if sys.version_info[0] == 2:
@@ -53,13 +53,18 @@ class CSCLDataset(object):
 
         return contents  
 
-    def _filterschema(self):
+    def _filterowner(self):
 
-        # inputs CSCL.BOROUGH jdoe.Foo Borough Foo
+        # inputs FOO.BAR 
+        #   -->  FOO, BAR
+        # input  BAR
+        #   -->  None, BAR
+        # input  foo_sqlserver.foo_sqlserver_bar.baz
+        #   -->  foo_sqlserver.foo_sqlserver_bar, baz
 
         if '.' in self.dataset:
-            return (self.dataset.partition('.')[0]
-                   ,self.dataset.partition('.')[2])
+            return (self.dataset.rpartition('.')[0]
+                   ,self.dataset.rpartition('.')[2])
         else:
             return None, self.dataset
 
