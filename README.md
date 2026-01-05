@@ -29,7 +29,7 @@ Report bad counts and (optionally) suspect values in a parent-child dataset pair
 
 ```text
 usage: qa_child_dataset.py [-h] [--badattribute BADATTRIBUTE] [--badattributecolumn BADATTRIBUTECOLUMN]
-                           [--deltastart DELTASTART]
+                           [--deltastart DELTASTART] [--childdataset CHILDDATASET]
                            dataset geodatabase childgeodatabase logdir
 
 QA a child CSCL dataset
@@ -48,6 +48,8 @@ options:
                         Column to check for junk
   --deltastart DELTASTART
                         Known count difference on the child
+  --childdataset CHILDDATASET
+                        Name of child dataset if namespace is different from parent
 ```
 
 
