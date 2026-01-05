@@ -43,8 +43,17 @@ def main():
     parser.add_argument("--deltastart"
                        ,type=int
                        ,help="Known count difference on the child", default=0)
+    # if the child is a file geodatabase we do not need this. We will auto-
+    # strip the SCHEMA.  However if the child is SQL Server we need to be told
+    # DATABASE.USER.dataset
+    parser.add_argument("--childdataset"
+                       ,help="Name of child dataset if namespace is different " 
+                             "from parent")
 
     args = parser.parse_args()
+
+    if args.childdataset is None: 
+        args.childdataset = args.dataset
 
     setuplogger('qa_child_dataset'
                ,args.dataset
@@ -57,7 +66,8 @@ def main():
     logger.info('comparing parent geodatabase {0}'.format(args.geodatabase))
     logger.info('to child geodatabase {0}'.format(args.childgeodatabase))
 
-    cscldataset = cscl_dataset.CSCLDataset(args.dataset)
+    cscldataset  = cscl_dataset.CSCLDataset(args.dataset)
+    childdataset = cscl_dataset.CSCLDataset(args.childdataset)
     badkount    = 0
 
     if args.badattributecolumn and args.badattribute:
@@ -76,9 +86,9 @@ def main():
                         args.badattribute
                        ,args.badattributecolumn))                        
 
-            if cscldataset.attribute_exists(args.childgeodatabase
-                                           ,args.badattributecolumn
-                                           ,args.badattribute):
+            if childdataset.attribute_exists(args.childgeodatabase
+                                            ,args.badattributecolumn
+                                            ,args.badattribute):
                 badkount +=1
                 logger.warning(
                     'QA: bad {0} value {1} on child'.format(
@@ -96,7 +106,7 @@ def main():
     try:
         # always check counts
         if cscldataset.count(args.geodatabase) != (
-            cscldataset.count(args.childgeodatabase) + args.deltastart
+            childdataset.count(args.childgeodatabase) + args.deltastart
             ):
 
             badkount +=1
@@ -105,7 +115,7 @@ def main():
                     cscldataset.count(args.geodatabase)))
             logger.info(
                 'Child count returned {0}'.format(
-                    cscldataset.count(args.childgeodatabase)))
+                    childdataset.count(args.childgeodatabase)))
             logger.warning(
                 'QA: bad row count on {0}'.format(args.childgeodatabase))
         else:

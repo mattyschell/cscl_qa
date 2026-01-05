@@ -79,7 +79,7 @@ def main():
     else: 
         content += '\n' + getlogfile(args.logdir
                                     ,args.logtype)  
-        if 'WARNING' in content:
+        if 'WARNING' in content or 'ERROR' in content:
             # report log details
             msg.set_content(content) 
         else:
