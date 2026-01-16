@@ -1,5 +1,8 @@
 import os
 import logging
+import time
+import shutil
+
 
 def setuplogger(loggername
                ,logname
@@ -24,3 +27,28 @@ def setuplogger(loggername
     file_handler.setFormatter(formatter)
 
     logger.addHandler(file_handler)
+
+def getlogfile(logdir
+              ,logname):
+
+    # we likely are here because we are notifying of QA 
+    # this is the flow from the .bat file
+    # all logs are named consistently from setuplogger above
+    # get XX.YY.log from a log directory
+    # copy the log to XX.YY-20251225-160745.log so we have a trail
+    # future runs will overwrite the original qa-abcversion.log
+
+    latest_log = os.path.join(logdir
+                             ,'{0}.log'.format(logname))
+
+    with open(os.path.join(logdir, latest_log), 'r') as file:
+        loglines = file.read()
+
+    stashlog = os.path.join(logdir 
+                           ,'{0}-{1}.log'.format(logname
+                                                ,time.strftime("%Y%m%d-%H%M%S")
+                                                ))
+    shutil.copy(latest_log
+               ,stashlog)
+
+    return loglines

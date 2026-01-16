@@ -1,10 +1,9 @@
 import datetime
-import glob
 import os
 import smtplib
 import argparse
-import time
-import shutil
+
+from logging_utils import getlogfile
 
 
 def ConditionalEmail():
@@ -24,38 +23,12 @@ def ConditionalEmail():
     return EmailMessage()
 
 
-def getlogfile(logdir
-              ,logtype):
-
-    # we are here because we are notifying of QA
-    # get most recent logtype* log from a log directory
-    # copy the log to qa-abcversion-20251225-160745.log so we have a trail
-    # future runs will overwrite the original qa-abcversion.log
-
-    list_of_logs = glob.glob(os.path.join(logdir
-                                         ,'{0}*.log'.format(logtype)))
-
-    latest_log = max(list_of_logs, key=os.path.getctime)
-
-    with open(os.path.join(logdir, latest_log), 'r') as file:
-        loglines = file.read()
-
-    stashlog = os.path.join(logdir 
-                           ,'{0}-{1}.log'.format(logtype
-                                                ,time.strftime("%Y%m%d-%H%M%S")
-                                                ))
-    shutil.copy(latest_log
-               ,stashlog)
-
-    return loglines
-
-
 def main():
     parser = argparse.ArgumentParser(description="Send comrades notifications")
 
     parser.add_argument("notification",help="Subject line for the notification")
     parser.add_argument("emails",help="Comma-separated list of recipients")
-    parser.add_argument("logtype",help="Log type, ex 'qa-abcworkversion'")
+    parser.add_argument("logname",help="Log type, ex 'SCHEMA.FEATURECLASS'")
     parser.add_argument("logdir",help="Directory where logs are stored")
     parser.add_argument("emailfrom",help="Email address used in From: header")
     parser.add_argument("smtpfrom",help="SMTP envelope sender")
@@ -72,13 +45,13 @@ def main():
     content += 'at {0} {1}'.format(datetime.datetime.now()
                                   ,os.linesep)
 
-    if args.logtype == 'NOLOG':
-        # NOLOG is args.logtype on catastrophic failures 
+    if args.logname == 'NOLOG':
+        # NOLOG is args.logname on catastrophic failures. NA in this repo I think 
         content = 'FAIL. No evidence to report. Check the logs in {}'.format(args.logdir)
         msg.set_content(content) 
     else: 
         content += '\n' + getlogfile(args.logdir
-                                    ,args.logtype)  
+                                    ,args.logname)  
         if 'WARNING' in content or 'ERROR' in content:
             # report log details
             msg.set_content(content) 
