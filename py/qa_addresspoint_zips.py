@@ -10,8 +10,13 @@ def main():
     parser.add_argument("problem_gdb", help="Output baddie geodatabase")
     args = parser.parse_args()
 
-    ignore_zips = {"10004" 
-                  ,"11370","10464","11695","11697"}  
+    special_zips = {
+        "10004": 2,
+        "11370": 2,
+        "10464": 2,
+        "11695": 2,
+        "11697": 2
+    }
 
     problem_zipz = os.path.join(args.problem_gdb,'problem_zips')
     zip_field    = 'ZIPCODE'
@@ -25,10 +30,6 @@ def main():
     })
 
     for z in zips:
-
-        if z in ignore_zips:
-            print(f"Skipping ZIP {z}: in ignore list")
-            continue
 
         where = f"{zip_field} = '{z}'"
 
@@ -69,7 +70,9 @@ def main():
             row[0] for row in arcpy.da.SearchCursor(out_fc, ["CLUSTER_ID"])
         }
 
-        if len(cluster_ids) > 1:
+        allowed_clusters = special_zips.get(z, 1) # default = 1 unless special
+
+        if len(cluster_ids) > allowed_clusters:
             problem_zips.append(z)
 
     print("Problem ZIPs:", problem_zips)

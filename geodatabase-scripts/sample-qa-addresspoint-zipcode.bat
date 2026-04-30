@@ -15,7 +15,6 @@ if exist "%PYTHON1%" (
     set PROPY=%PYTHON2%
 ) 
 echo QAing %ADDRESSPOINT% ZIP codes on %date% at %time% 
-REM exit 1 if QA 
 CALL %PROPY% %BASEPATH%\cscl_qa\py\qa_addresspoint_zips.py %ADDRESSPOINT% %SCRATCHGDB% %PROBLEMGDB%
 echo done QAing %ADDRESSPOINT% ZIP codes on %date% at %time%
    
