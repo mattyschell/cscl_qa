@@ -11,7 +11,7 @@ def main():
     args = parser.parse_args()
 
     ignore_zips = {"10004" 
-                  ,"11370"}  
+                  ,"11370","10464","11695","11697"}  
 
     problem_zipz = os.path.join(args.problem_gdb,'problem_zips')
     zip_field    = 'ZIPCODE'
