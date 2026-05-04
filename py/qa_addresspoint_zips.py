@@ -2,87 +2,171 @@ import arcpy
 import os
 import argparse
 
+def make_polyline_zip_point_layer(fc
+                                 ,scratch_gdb
+                                 ,zip_field
+                                 ,zip_code
+                                 ,where_clause
+                                 ,layer_name):
+
+    # Todo: do better
+    line_densify_distance = "500 feet" 
+    line_end_points = 'END_POINTS'
+
+    # convert centerlines to points                             
+    temp_line_layer = f"line_lyr_{zip_field}_{zip_code}"
+    if arcpy.Exists(temp_line_layer):
+        arcpy.management.Delete(temp_line_layer)
+
+    arcpy.management.MakeFeatureLayer(fc, temp_line_layer, where_clause)
+
+    points_fc = f"{scratch_gdb}/points_{zip_field}_{zip_code}"
+    if arcpy.Exists(points_fc):
+        arcpy.management.Delete(points_fc)
+
+    # GeneratePointsAlongLines doesnt appear to support named parameters 
+    arcpy.management.GeneratePointsAlongLines(
+        temp_line_layer,
+        points_fc,
+        "DISTANCE",
+        line_densify_distance,
+        None,
+        line_end_points
+    )
+
+    arcpy.management.MakeFeatureLayer(points_fc, layer_name)
+
 def main():
 
-    parser = argparse.ArgumentParser(description="QA addresspoint ZIP codes")
-    parser.add_argument("fc", help="Input address point dataset")
-    parser.add_argument("scratch_gdb", help="Input scratch geodatabase")
+    parser = argparse.ArgumentParser(description=
+                                    "QA addresspoint or centerline ZIP codes")
+    parser.add_argument("fc", help="Input CSCL dataset")
+    parser.add_argument("scratch_gdb", help="Scratch geodatabase")
     parser.add_argument("problem_gdb", help="Output baddie geodatabase")
     args = parser.parse_args()
 
+    out_zips = os.path.join(args.problem_gdb,'problem_zips')
+
+    shape_type = arcpy.Describe(args.fc).shapeType
+
+    # todo: review
+    # entering the hard code zone
+    minimum_sample_size = 5
+    neighborhood_radius = "4000 feet"
+    minimum_cluster_count = 3
+
+    if shape_type == 'Point':
+        zip_fields = ['ZIPCODE']
+    elif shape_type == 'Polyline':
+        zip_fields = ['L_ZIP'
+                     ,'R_ZIP']
+    else:
+        raise ValueError('input {0} has shape type {1}'.format(args.fc
+                                                              ,shape_type))
+
+    # ZIP codes we know to be in 2 clusters 
     special_zips = {
         "10004": 2,
+        "10121": 2,
+        "10155": 2,
         "11370": 2,
         "10464": 2,
         "11695": 2,
         "11697": 2
-    }
-
-    problem_zipz = os.path.join(args.problem_gdb,'problem_zips')
-    zip_field    = 'ZIPCODE'
+    }   
+    # exiting the hard code zone
 
     problem_zips = []
 
-    # Get distinct ZIP codes (skip NULLs)
-    zips = sorted({
-        row[0] for row in arcpy.da.SearchCursor(args.fc, [zip_field])
-        if row[0] not in (None, "", " ")
-    })
+    # Process each zip field (ZIPCODE for points, L_ZIP and R_ZIP for polylines)
+    for zip_field in zip_fields:
+        
+        # Get distinct ZIP codes (skip NULLs)
+        zips = sorted({
+            row[0] for row in arcpy.da.SearchCursor(args.fc, [zip_field])
+            if row[0] not in (None, "", " ")
+        })
 
-    for z in zips:
+        # override to check selected  
+        #zips = [11231,11695,11697]
 
-        where = f"{zip_field} = '{z}'"
+        for z in zips:
 
-        # Unique layer name
-        layer_name = f"zip_lyr_{z}"
+            where = f"{zip_field} = '{z}'"
 
-        # Delete old layer
-        if arcpy.Exists(layer_name):
-            arcpy.management.Delete(layer_name)
+            # Unique layer name
+            layer_name = f"zip_lyr_{zip_field}_{z}"
 
-        arcpy.management.MakeFeatureLayer(args.fc, layer_name, where)
+            # Delete old layer
+            if arcpy.Exists(layer_name):
+                arcpy.management.Delete(layer_name)
 
-        # Count points
-        count = int(arcpy.management.GetCount(layer_name)[0])
+            # For polylines, generate points along lines
+            if shape_type == 'Polyline':
+                make_polyline_zip_point_layer(
+                    args.fc,
+                    args.scratch_gdb,
+                    zip_field,
+                    z,
+                    where,
+                    layer_name
+                )
+            else:
+                # For points, create layer directly with where clause
+                arcpy.management.MakeFeatureLayer(args.fc
+                                                 ,layer_name
+                                                 ,where)
 
-        # Optional: skip very small ZIPs
-        if count < 10:
-            print(f"Skipping ZIP {z}: only {count} points")
-            continue
+            # Count points
+            count = int(arcpy.management.GetCount(layer_name)[0])
 
-        # Output FC
-        out_fc = f"{args.scratch_gdb}/cluster_{z}"
+            # skip ZIPs with limited data to evaluate
+            if count < minimum_sample_size:
+                print(f"Skipping ZIP {z}: only {count} points")
+                continue
 
-        # Delete old output
-        if arcpy.Exists(out_fc):
-            arcpy.management.Delete(out_fc)
+            # Output FC
+            out_fc = f"{args.scratch_gdb}/cluster_{zip_field}_{z}"
 
-        arcpy.stats.DensityBasedClustering(
-            layer_name,
-            out_fc,
-            "DBSCAN",
-            3,
-            "4000 feet"
-        )
+            # Delete old output
+            if arcpy.Exists(out_fc):
+                arcpy.management.Delete(out_fc)
 
-        # Count clusters
-        cluster_ids = {
-            row[0] for row in arcpy.da.SearchCursor(out_fc, ["CLUSTER_ID"])
-        }
+            # this thing is chatty so we add what it is yakking about
+            print('{0}: {1}'.format(zip_field, z))
+            
+            arcpy.stats.DensityBasedClustering(
+                layer_name,
+                out_fc,
+                "DBSCAN",
+                minimum_cluster_count,
+                neighborhood_radius
+            )
 
-        allowed_clusters = special_zips.get(z, 1) # default = 1 unless special
+            # Count clusters
+            cluster_ids = {
+                row[0] for row in arcpy.da.SearchCursor(out_fc, ["CLUSTER_ID"])
+            }
 
-        if len(cluster_ids) > allowed_clusters:
-            problem_zips.append(z)
+            allowed_clusters = special_zips.get(z, 1) # default = 1 unless special
 
-    print("Problem ZIPs:", problem_zips)
+            if len(cluster_ids) > allowed_clusters:
+                problem_zips.append(z)
 
     # Create final layer of only problematic ZIPs
     if problem_zips:
+        print("Problem ZIPs:", problem_zips)
         zip_list = ",".join([f"'{z}'" for z in problem_zips])
-        sql = f"{zip_field} IN ({zip_list})"
+        if shape_type == 'Polyline':
+            # For polylines, check both L_ZIP and R_ZIP
+            sql = f"({' OR '.join([f'{zf} IN ({zip_list})' for zf in zip_fields])})"
+        else:
+            # For points, check ZIPCODE
+            sql = f"ZIPCODE IN ({zip_list})"
         arcpy.management.MakeFeatureLayer(args.fc, "problem_zip_points", sql)
-        arcpy.management.CopyFeatures("problem_zip_points", problem_zipz)
+        arcpy.management.CopyFeatures("problem_zip_points", out_zips)
+    else:
+        print("No problem zips")
 
 if __name__ == '__main__':
     main()

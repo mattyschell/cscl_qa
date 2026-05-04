@@ -52,18 +52,18 @@ options:
                         Name of child dataset if namespace is different from parent
 ```
 
-### QA Address Point ZIP Codes
+### QA ZIP Codes
 
-This script is not polished and (for now) is intended to be run manually. The output is printout to the screen and a file geodatabase with suspect address point clusters.
+This script is not polished and (for now) must be run manually. The output is printout to the screen and a file geodatabase with suspect address point clusters.
 
-It uses the well-known DBSCAN algorithm to find address points with ZIP code values that are not in a single cluster. These usually indicate incorrect ZIP code values on the source centerline dataset.
+It uses the well-known [DBSCAN](https://en.wikipedia.org/wiki/DBSCAN) algorithm to find ZIP code values that are not in a single cluster. It accepts as input either AddressPoint or Centerline.
 
-The number of points required to form a cluster and the distance are configurable in the call to arcpy.stats.DensityBasedClustering. These are hard coded for now. Feedback and further guidance TBD.
+The number of points required to form a cluster and the distance are configurable in the call to arcpy.stats.DensityBasedClustering. These are hard coded for now. If the input is centerlines we call GeneratePointsAlongLines with hard coded inputs.
 
-Also hard coded in the script is a list of known multi-cluster address point ZIP codes like lower Manhattan plus Governor's Island. This should be improved.
+Also hard coded in the script is a list of known multi-cluster ZIP codes like lower Manhattan plus Governor's Island. This should be improved.
 
 ```sh
-> geodatabase-scripts\sample-qa-addresspoint-zipcode.bat
+> geodatabase-scripts\sample-qa-zipcode.bat
 ```
 
 
