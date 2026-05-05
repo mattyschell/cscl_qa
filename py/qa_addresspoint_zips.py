@@ -4,7 +4,7 @@ import argparse
 
 def make_polyline_zip_point_layer(fc
                                  ,scratch_gdb
-                                 ,zip_field
+                                 ,zip_token
                                  ,zip_code
                                  ,where_clause
                                  ,layer_name):
@@ -14,13 +14,13 @@ def make_polyline_zip_point_layer(fc
     line_end_points = 'END_POINTS'
 
     # convert centerlines to points                             
-    temp_line_layer = f"line_lyr_{zip_field}_{zip_code}"
+    temp_line_layer = f"line_lyr_{zip_token}_{zip_code}"
     if arcpy.Exists(temp_line_layer):
         arcpy.management.Delete(temp_line_layer)
 
     arcpy.management.MakeFeatureLayer(fc, temp_line_layer, where_clause)
 
-    points_fc = f"{scratch_gdb}/points_{zip_field}_{zip_code}"
+    points_fc = f"{scratch_gdb}/points_{zip_token}_{zip_code}"
     if arcpy.Exists(points_fc):
         arcpy.management.Delete(points_fc)
 
@@ -78,80 +78,89 @@ def main():
 
     problem_zips = []
 
-    # Process each zip field (ZIPCODE for points, L_ZIP and R_ZIP for polylines)
-    for zip_field in zip_fields:
-        
-        # Get distinct ZIP codes (skip NULLs)
+    if shape_type == 'Polyline':
+        # Build one ZIP list using both sides, then process each ZIP once.
         zips = sorted({
-            row[0] for row in arcpy.da.SearchCursor(args.fc, [zip_field])
+            value
+            for row in arcpy.da.SearchCursor(args.fc, ["L_ZIP", "R_ZIP"])
+            for value in row
+            if value not in (None, "", " ")
+        })
+    else:
+        zips = sorted({
+            row[0] for row in arcpy.da.SearchCursor(args.fc, ["ZIPCODE"])
             if row[0] not in (None, "", " ")
         })
 
-        # override to check selected  
-        #zips = [11231,11695,11697]
+    # override to check selected
+    #zips = [11231,11695,11697]
 
-        for z in zips:
+    for z in zips:
 
-            where = f"{zip_field} = '{z}'"
+        if shape_type == 'Polyline':
+            where = f"L_ZIP = '{z}' OR R_ZIP = '{z}'"
+            layer_name = f"zip_lyr_LRZIP_{z}"
+            zip_token = "LRZIP"
+        else:
+            where = f"ZIPCODE = '{z}'"
+            layer_name = f"zip_lyr_ZIPCODE_{z}"
+            zip_token = "ZIPCODE"
 
-            # Unique layer name
-            layer_name = f"zip_lyr_{zip_field}_{z}"
+        # Delete old layer
+        if arcpy.Exists(layer_name):
+            arcpy.management.Delete(layer_name)
 
-            # Delete old layer
-            if arcpy.Exists(layer_name):
-                arcpy.management.Delete(layer_name)
-
-            # For polylines, generate points along lines
-            if shape_type == 'Polyline':
-                make_polyline_zip_point_layer(
-                    args.fc,
-                    args.scratch_gdb,
-                    zip_field,
-                    z,
-                    where,
-                    layer_name
-                )
-            else:
-                # For points, create layer directly with where clause
-                arcpy.management.MakeFeatureLayer(args.fc
-                                                 ,layer_name
-                                                 ,where)
-
-            # Count points
-            count = int(arcpy.management.GetCount(layer_name)[0])
-
-            # skip ZIPs with limited data to evaluate
-            if count < minimum_sample_size:
-                print(f"Skipping ZIP {z}: only {count} points")
-                continue
-
-            # Output FC
-            out_fc = f"{args.scratch_gdb}/cluster_{zip_field}_{z}"
-
-            # Delete old output
-            if arcpy.Exists(out_fc):
-                arcpy.management.Delete(out_fc)
-
-            # this thing is chatty so we add what it is yakking about
-            print('{0}: {1}'.format(zip_field, z))
-            
-            arcpy.stats.DensityBasedClustering(
-                layer_name,
-                out_fc,
-                "DBSCAN",
-                minimum_cluster_count,
-                neighborhood_radius
+        # For polylines, generate points along lines
+        if shape_type == 'Polyline':
+            make_polyline_zip_point_layer(
+                args.fc,
+                args.scratch_gdb,
+                zip_token,
+                z,
+                where,
+                layer_name
             )
+        else:
+            # For points, create layer directly with where clause
+            arcpy.management.MakeFeatureLayer(args.fc
+                                             ,layer_name
+                                             ,where)
 
-            # Count clusters
-            cluster_ids = {
-                row[0] for row in arcpy.da.SearchCursor(out_fc, ["CLUSTER_ID"])
-            }
+        # Count points
+        count = int(arcpy.management.GetCount(layer_name)[0])
 
-            allowed_clusters = special_zips.get(z, 1) # default = 1 unless special
+        # skip ZIPs with limited data to evaluate
+        if count < minimum_sample_size:
+            print(f"Skipping ZIP {z}: only {count} points")
+            continue
 
-            if len(cluster_ids) > allowed_clusters:
-                problem_zips.append(z)
+        # Output FC
+        out_fc = f"{args.scratch_gdb}/cluster_{zip_token}_{z}"
+
+        # Delete old output
+        if arcpy.Exists(out_fc):
+            arcpy.management.Delete(out_fc)
+
+        # this thing is chatty so we add what it is yakking about
+        print('{0}: {1}'.format(zip_token, z))
+        
+        arcpy.stats.DensityBasedClustering(
+            layer_name,
+            out_fc,
+            "DBSCAN",
+            minimum_cluster_count,
+            neighborhood_radius
+        )
+
+        # Count clusters
+        cluster_ids = {
+            row[0] for row in arcpy.da.SearchCursor(out_fc, ["CLUSTER_ID"])
+        }
+
+        allowed_clusters = special_zips.get(z, 1) # default = 1 unless special
+
+        if len(cluster_ids) > allowed_clusters:
+            problem_zips.append(z)
 
     # Create final layer of only problematic ZIPs
     if problem_zips:
