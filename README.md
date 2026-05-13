@@ -66,6 +66,8 @@ Also hard coded in the script is a list of known multi-cluster ZIP codes like lo
 > geodatabase-scripts\sample-qa-zipcode.bat
 ```
 
+See [this companion document](doc/AddressPoint_ZipCode.md) for visual review tips.
+
 
 ### Tests
 
