@@ -13,4 +13,6 @@ if exist "%OLDPY7%" (
     set OLDPY=%OLDPY8%
 ) 
 call %PROPY% .\py\test_cscl_dataset.py
+call %PROPY% .\py\test_polygon_qa.py
 call %OLDPY% .\py\test_cscl_dataset.py
+call %OLDPY% .\py\test_polygon_qa.py
