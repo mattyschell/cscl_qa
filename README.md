@@ -68,6 +68,15 @@ Also hard coded in the script is a list of known multi-cluster ZIP codes like lo
 
 See [this companion document](doc/AddressPoint_ZipCode.md) for visual review tips.
 
+### QA Overlaps
+
+Some polygon feature classes should not allow overlapping polygons within the feature class.  City Council Districts come to mind.
+
+See this sample script to QA one feature class and report overlaps.
+
+```sh
+> geodatabase-scripts\sample-qa-overlap.bat
+```
 
 ### Tests
 
