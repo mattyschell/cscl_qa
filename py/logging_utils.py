@@ -41,7 +41,7 @@ def getlogfile(logdir
     latest_log = os.path.join(logdir
                              ,'{0}.log'.format(logname))
 
-    with open(os.path.join(logdir, latest_log), 'r') as file:
+    with open(latest_log, 'r') as file:
         loglines = file.read()
 
     stashlog = os.path.join(logdir 
