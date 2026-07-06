@@ -54,13 +54,13 @@ options:
 
 ### QA ZIP Codes
 
-This script is not polished and (for now) must be run manually. The output is printout to the screen and a file geodatabase with suspect address point clusters.
+This script is not polished and (for now) must be run manually. The output is printout to the screen and a file geodatabase (py\resources\problem_zip_points.gdb) populated with suspect clusters.
 
-It uses the well-known [DBSCAN](https://en.wikipedia.org/wiki/DBSCAN) algorithm to find ZIP code values that are not in a single cluster. It accepts as input either AddressPoint or Centerline.
+We use the well-known [DBSCAN](https://en.wikipedia.org/wiki/DBSCAN) algorithm to identify ZIP code values that are not in a single cluster. We accept as input either AddressPoint or Centerline. If the input is Centerline we call GeneratePointsAlongLines with hard coded values.
 
-The number of points required to form a cluster and the distance are configurable in the call to arcpy.stats.DensityBasedClustering. These are hard coded for now. If the input is centerlines we call GeneratePointsAlongLines with hard coded inputs.
+The number of points required to form a cluster and the scan distance are configurable. If not configured these variables default to good known values. 
 
-Also hard coded in the script is a list of known multi-cluster ZIP codes like lower Manhattan plus Governor's Island. This should be improved.
+Several ZIP codes are legit multi-cluster ZIP codes like lower Manhattan plus Governor's Island. These ZIP codes get a reprieve from QA via the list in py\resources\multiclusterzipcodes.  
 
 ```sh
 > geodatabase-scripts\sample-qa-zipcode.bat

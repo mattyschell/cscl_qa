@@ -2,6 +2,31 @@ import arcpy
 import os
 import argparse
 
+
+def load_multicluster_zipcodes(resource_path):
+    """Load ZIP -> allowed cluster count mappings from a resource file."""
+    mapping = {}
+    with open(resource_path, "r", encoding="utf-8") as handle:
+        for raw_line in handle:
+            line = raw_line.strip()
+            if not line or line.startswith("#"):
+                continue
+            parts = line.split()
+            if len(parts) < 2:
+                continue
+            zip_code, cluster_count = parts[0], parts[1]
+            mapping[str(zip_code)] = int(cluster_count)
+    return mapping
+
+
+def recreate_file_gdb(parent_dir, gdb_name):
+    """Delete and recreate a file geodatabase, returning its full path."""
+    gdb_path = os.path.join(parent_dir, gdb_name)
+    if arcpy.Exists(gdb_path):
+        arcpy.management.Delete(gdb_path)
+    arcpy.management.CreateFileGDB(parent_dir, gdb_name)
+    return gdb_path
+
 def make_polyline_zip_point_layer(fc
                                  ,scratch_gdb
                                  ,zip_token
@@ -41,19 +66,36 @@ def main():
     parser = argparse.ArgumentParser(description=
                                     "QA addresspoint or centerline ZIP codes")
     parser.add_argument("fc", help="Input CSCL dataset")
-    parser.add_argument("scratch_gdb", help="Scratch geodatabase")
-    parser.add_argument("problem_gdb", help="Output baddie geodatabase")
+    parser.add_argument(
+        "--minimum-sample-size",
+        type=int,
+        default=5,
+        help="Minimum point count required for a ZIP to be evaluated (default: 5)",
+    )
+    parser.add_argument(
+        "--neighborhood-radius",
+        default="4000 feet",
+        help="Neighborhood radius for DBSCAN (default: '4000 feet')",
+    )
+    parser.add_argument(
+        "--minimum-cluster-count",
+        type=int,
+        default=3,
+        help="Minimum features per cluster for DBSCAN (default: 3)",
+    )
     args = parser.parse_args()
 
-    out_zips = os.path.join(args.problem_gdb,'problem_zips')
+    resource_dir = os.path.join(os.path.dirname(__file__), "resources")
+    scratch_gdb = recreate_file_gdb(resource_dir, "scratch.gdb")
+    problem_gdb = recreate_file_gdb(resource_dir, "problem.gdb")
+
+    out_zips = os.path.join(problem_gdb,'problem_zips')
 
     shape_type = arcpy.Describe(args.fc).shapeType
 
-    # todo: review
-    # entering the hard code zone
-    minimum_sample_size = 5
-    neighborhood_radius = "4000 feet"
-    minimum_cluster_count = 3
+    minimum_sample_size = args.minimum_sample_size
+    neighborhood_radius = args.neighborhood_radius
+    minimum_cluster_count = args.minimum_cluster_count
 
     if shape_type == 'Point':
         zip_fields = ['ZIPCODE']
@@ -64,17 +106,10 @@ def main():
         raise ValueError('input {0} has shape type {1}'.format(args.fc
                                                               ,shape_type))
 
-    # ZIP codes we know to be in 2 clusters 
-    special_zips = {
-        "10004": 2,
-        "10121": 2,
-        "10155": 2,
-        "11370": 2,
-        "10464": 2,
-        "11695": 2,
-        "11697": 2
-    }   
-    # exiting the hard code zone
+    multicluster_zip_resource = os.path.join(
+        os.path.dirname(__file__), "resources", "multiclusterzipcodes"
+    )
+    special_zips = load_multicluster_zipcodes(multicluster_zip_resource)
 
     problem_zips = []
 
@@ -114,7 +149,7 @@ def main():
         if shape_type == 'Polyline':
             make_polyline_zip_point_layer(
                 args.fc,
-                args.scratch_gdb,
+                scratch_gdb,
                 zip_token,
                 z,
                 where,
@@ -135,7 +170,7 @@ def main():
             continue
 
         # Output FC
-        out_fc = f"{args.scratch_gdb}/cluster_{zip_token}_{z}"
+        out_fc = f"{scratch_gdb}/cluster_{zip_token}_{z}"
 
         # Delete old output
         if arcpy.Exists(out_fc):

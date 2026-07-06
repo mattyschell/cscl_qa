@@ -1,5 +1,9 @@
 scratch/*
 */logs/*
+# Ignore all file geodatabases by default
+*.gdb/
+# Keep testdata geodatabases tracked
+!testdata/*.gdb/
 .pyc
 *__pycache__*
 *.bat
