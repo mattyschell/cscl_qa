@@ -27,6 +27,7 @@ def recreate_file_gdb(parent_dir, gdb_name):
     arcpy.management.CreateFileGDB(parent_dir, gdb_name)
     return gdb_path
 
+
 def make_polyline_zip_point_layer(fc
                                  ,scratch_gdb
                                  ,zip_token
@@ -178,7 +179,7 @@ def main():
 
         # this thing is chatty so we add what it is yakking about
         print('{0}: {1}'.format(zip_token, z))
-        
+
         arcpy.stats.DensityBasedClustering(
             layer_name,
             out_fc,

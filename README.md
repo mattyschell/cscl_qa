@@ -100,6 +100,16 @@ See this sample script to QA one feature class and report overlaps.
 > geodatabase-scripts\sample-qa-overlap.bat
 ```
 
+### QA Row Counts
+
+Sanity check that the big datasets have not been gutted or duplicated. Limits live in py\resources\rowcountrange (cscl) and py\resources\rowcountrange_pub (cscl_pub, pass via `--rowcountrange`) as `dataset minimum maximum` lines, set at roughly 90 and 110 percent of normal so only catastrophic change trips QA. Bump them as the data grows.
+
+```text
+usage: qa_row_count.py [-h] [--owner OWNER] [--rowcountrange ROWCOUNTRANGE] geodatabase logdir logname logmode
+```
+
+Use `--owner CSCL` against an enterprise geodatabase. The prd and stg replace-cscl*-gdb.bat scripts call qa-rowcount.bat or qa-pub-rowcount.bat first and stop publishing on failure.
+
 ### Tests
 
 Update the environmentals if necessary.
