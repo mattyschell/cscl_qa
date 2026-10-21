@@ -1,6 +1,6 @@
 set ENV=xxx
 set BASEPATH=X:\xxx
-set LOGDIR=%BASEPATH%\geodatabase-scripts\log\scscl_qa
+set LOGDIR=%BASEPATH%\geodatabase-scripts\logs\cscl_qa
 set DB=xxxxxxx
 set CSCLLAYER=xxxx.xxxxxxx
 set CSCLGDB=%BASEPATH%\Connections\oracle19c\%ENV%\CSCL-%DB%\cscl_read_only.sde

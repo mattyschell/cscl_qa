@@ -104,6 +104,8 @@ See this sample script to QA one feature class and report overlaps.
 
 Sanity check that the big datasets have not been gutted or duplicated. Limits live in py\resources\rowcountrange (cscl) and py\resources\rowcountrange_pub (cscl_pub, pass via `--rowcountrange`) as `dataset minimum maximum` lines, set at roughly 90 and 110 percent of normal so only catastrophic change trips QA. Bump them as the data grows.
 
+In standard use from agol_pub_cscl you should create a rowcountrange file in the scripts directory and set %ROWCOUNTRANGE% pointing to the local counts file from the publishing script. 
+
 ```text
 usage: qa_row_count.py [-h] [--owner OWNER] [--rowcountrange ROWCOUNTRANGE] geodatabase logdir logname logmode
 ```
