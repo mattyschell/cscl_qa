@@ -40,15 +40,15 @@ def check_ranges(geodatabase, ranges, logger, owner=None):
 
         if kount is None:
             badkount += 1
-            logger.warning('QA: no row count for {0}'.format(dataset))
+            logger.error('QA: no row count for {0}'.format(dataset))
         elif kount < minimum:
             badkount += 1
-            logger.warning(
+            logger.error(
                 'QA: {0} has {1} rows, expected at least {2}'.format(
                     dataset, kount, minimum))
         elif kount > maximum:
             badkount += 1
-            logger.warning(
+            logger.error(
                 'QA: {0} has {1} rows, expected at most {2}'.format(
                     dataset, kount, maximum))
         else:
